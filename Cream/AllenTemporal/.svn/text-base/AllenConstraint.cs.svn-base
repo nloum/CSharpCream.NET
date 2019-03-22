@@ -1,0 +1,677 @@
+﻿using System;
+
+namespace Cream.AllenTemporal
+{
+
+    public class AllenConstraint : Constraint
+    {
+        
+        private int relation;
+        private Variable[] v;
+        private AllenDomain[] newDomains = new AllenDomain[2];
+
+        public AllenConstraint(Network net, int a, Variable v1, Variable v2)
+            : this(net, a, new Variable[] { v1, v2 })
+        {
+        }
+
+        private AllenConstraint(Network net, int a, Variable[] v)
+            : base(net)
+        {
+            relation = a;
+            this.v = v;
+        }
+
+        public Variable[] Vars
+        {
+            get
+            {
+                return v;
+            }
+        }
+
+        public int AllenEvent
+        {
+            get
+            {
+                return relation;
+            }
+        }
+
+        public AllenDomain[] NewDomains
+        {
+            get
+            {
+                return newDomains;
+            }
+        }
+        
+        protected internal override Constraint copy(Network net)
+        {
+            return new AllenConstraint(net, relation, copy(v, net));
+        }
+
+        protected internal override bool isModified()
+        {
+            return isModified(v);
+        }
+
+        protected internal override bool isSatisfied()
+        {
+            return satisfy(null);
+        }
+
+        protected internal override bool satisfy(Trail trail)
+        {
+            switch (relation)
+            {
+                case AllenEvents.PRECEDES:
+                    return satisfyPRECEDES(Vars[0], Vars[1], trail);
+
+                case AllenEvents.PRECEDEDBY:
+                    return satisfyPRECEDEDBY(Vars[0], Vars[1], trail);
+
+                case AllenEvents.EQUALS:
+                    return satisfyEQUALS(Vars[0], Vars[1], trail);
+
+                case AllenEvents.MEETS:
+                    return satisfyMEETS(Vars[0], Vars[1], trail);
+
+                case AllenEvents.METBY:
+                    return satisfyMETBY(Vars[0], Vars[1], trail);
+
+                case AllenEvents.DURING:
+                    return satisfyDURING(Vars[0], Vars[1], trail);
+
+                case AllenEvents.CONTAINS:
+                    return satisfyCONTAINS(Vars[0], Vars[1], trail);
+
+                case AllenEvents.STARTS:
+                    return satisfySTARTS(Vars[0], Vars[1], trail);
+
+                case AllenEvents.STARTEDBY:
+                    return satisfySTARTEDBY(Vars[0], Vars[1], trail);
+
+                case AllenEvents.FINISHES:
+                    return satisfyFINISHES(Vars[0], Vars[1], trail);
+
+                case AllenEvents.FINISHEDBY:
+                    return satisfyFINISHEDBY(Vars[0], Vars[1], trail);
+
+                case AllenEvents.OVERLAPS:
+                    return satisfyOVERLAPS(Vars[0], Vars[1], trail);
+
+                case AllenEvents.OVERLAPPEDBY:
+                    return satisfyOVERLAPPEDBY(Vars[0], Vars[1], trail);
+            }
+            return false;
+        }
+//********************************
+        private static bool satisfyOVERLAPPEDBY(Variable v1, Variable v2, Trail trail)
+        {
+            AllenDomain d1 = (AllenDomain) v1.Domain;
+            if (d1.Empty) return false;
+            AllenDomain d3 = (AllenDomain) d1.Clone();
+            AllenDomain d2 = (AllenDomain) v2.Domain;
+            if (d2.Empty) return false;
+            for (int st1 = d1.min(); st1 <= d1.max(); st1 += d1.Step)
+            {
+                bool found = false;
+                for (int st2 = d2.min(); st2 <= d2.max(); st2 += d2.Step)
+                {
+                    int lt1 = st1 + d1.Duration;
+                    int lt2 = st2 + d2.Duration;
+                    if ((st1 > st2) && (lt1 > lt2))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    d3.remove(st1);
+                    if (d3.size() == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            //v1.updateDomain(d3, trail);
+            return true;
+        }
+
+        private static bool satisfyOVERLAPS(Variable v1, Variable v2, Trail trail)
+        {
+            AllenDomain d1 = (AllenDomain)v1.Domain;
+            if (d1.Empty) return false;
+            AllenDomain d3 = (AllenDomain)d1.Clone();
+            AllenDomain d2 = (AllenDomain)v2.Domain;
+            if (d2.Empty) return false;
+            for (int st1 = d1.min(); st1 <= d1.max(); st1 += d1.Step)
+            {
+                bool found = false;
+                for (int st2 = d2.min(); st2 <= d2.max(); st2 += d2.Step)
+                {
+                    int lt1 = st1 + d1.Duration;
+                    int lt2 = st2 + d2.Duration;
+                    if ((st1 < st2) && (lt1 < lt2))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    d3.remove(st1);
+                    if (d3.size() == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            //v1.updateDomain(d3, trail);
+            return true;
+        }
+
+        private static bool satisfyFINISHEDBY(Variable v1, Variable v2, Trail trail)
+        {
+            AllenDomain d1 = (AllenDomain)v1.Domain;
+            if (d1.Empty) return false;
+            AllenDomain d3 = (AllenDomain)d1.Clone();
+            AllenDomain d2 = (AllenDomain)v2.Domain;
+            if (d2.Empty) return false;
+            for (int st1 = d1.min(); st1 <= d1.max(); st1 += d1.Step)
+            {
+                bool found = false;
+                for (int st2 = d2.min(); st2 <= d2.max(); st2 += d2.Step)
+                {
+                    int lt1 = st1 + d1.Duration;
+                    int lt2 = st2 + d2.Duration;
+                    if ((st1 < st2) && (lt1 == lt2))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    d3.remove(st1);
+                    if (d3.size() == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            //v1.updateDomain(d3, trail);
+            return true;
+        }
+
+        private static bool satisfyFINISHES(Variable v1, Variable v2, Trail trail)
+        {
+            AllenDomain d1 = (AllenDomain)v1.Domain;
+            if (d1.Empty) return false;
+            AllenDomain d3 = (AllenDomain)d1.Clone();
+            AllenDomain d2 = (AllenDomain)v2.Domain;
+            if (d2.Empty) return false;
+            for (int st1 = d1.min(); st1 <= d1.max(); st1 += d1.Step)
+            {
+                bool found = false;
+                for (int st2 = d2.min(); st2 <= d2.max(); st2 += d2.Step)
+                {
+                    int lt1 = st1 + d1.Duration;
+                    int lt2 = st2 + d2.Duration;
+                    if ((st1 > st2) && (lt1 == lt2))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    d3.remove(st1);
+                    if (d3.size() == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            //v1.updateDomain(d3, trail);
+            return true;
+        }
+
+        private static bool satisfySTARTEDBY(Variable v1, Variable v2, Trail trail)
+        {
+            AllenDomain d1 = (AllenDomain)v1.Domain;
+            if (d1.Empty) return false;
+            AllenDomain d3 = (AllenDomain)d1.Clone();
+            AllenDomain d2 = (AllenDomain)v2.Domain;
+            if (d2.Empty) return false;
+            for (int st1 = d1.min(); st1 <= d1.max(); st1 += d1.Step)
+            {
+                bool found = false;
+                for (int st2 = d2.min(); st2 <= d2.max(); st2 += d2.Step)
+                {
+                    int lt1 = st1 + d1.Duration;
+                    int lt2 = st2 + d2.Duration;
+                    if ((st1 == st2) && (lt1 > lt2))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    d3.remove(st1);
+                    if (d3.size() == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            //v1.updateDomain(d3, trail);
+            return true;
+        }
+
+        private static bool satisfySTARTS(Variable v1, Variable v2, Trail trail)
+        {
+            AllenDomain d1 = (AllenDomain)v1.Domain;
+            if (d1.Empty) return false;
+            AllenDomain d3 = (AllenDomain)d1.Clone();
+            AllenDomain d2 = (AllenDomain)v2.Domain;
+            if (d2.Empty) return false;
+            for (int st1 = d1.min(); st1 <= d1.max(); st1 += d1.Step)
+            {
+                bool found = false;
+                for (int st2 = d2.min(); st2 <= d2.max(); st2 +=d2.Step)
+                {
+                    int lt1 = st1 + d1.Duration;
+                    int lt2 = st2 + d2.Duration;
+                    if ((st1 == st2) && (lt1 < lt2))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    d3.remove(st1);
+                    if (d3.size() == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            //v1.updateDomain(d3, trail);
+            return true;
+        }
+
+        private static bool satisfyCONTAINS(Variable v1, Variable v2, Trail trail)
+        {
+            AllenDomain d1 = (AllenDomain)v1.Domain;
+            if (d1.Empty) return false;
+            AllenDomain d3 = (AllenDomain)d1.Clone();
+            AllenDomain d2 = (AllenDomain)v2.Domain;
+            if (d2.Empty) return false;
+            for (int st1 = d1.min(); st1 <= d1.max(); st1 += d1.Step)
+            {
+                bool found = false;
+                for (int st2 = d2.min(); st2 <= d2.max(); st2 += d2.Step)
+                {
+                    int lt1 = st1 + d1.Duration;
+                    int lt2 = st2 + d2.Duration;
+                    if ((st1 < st2) && (lt1 > lt2))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    d3.remove(st1);
+                    if (d3.size() == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            //v1.updateDomain(d3, trail);
+            return true;
+        }
+
+        private static bool satisfyDURING(Variable v1, Variable v2, Trail trail)
+        {
+            AllenDomain d1 = (AllenDomain)v1.Domain;
+            if (d1.Empty) return false;
+            AllenDomain d3 = (AllenDomain)d1.Clone();
+            AllenDomain d2 = (AllenDomain)v2.Domain;
+            if (d2.Empty) return false;
+            for (int st1 = d1.min(); st1 <= d1.max(); st1 += d1.Step)
+            {
+                bool found = false;
+                for (int st2 = d2.min(); st2 <= d2.max(); st2 += d2.Step)
+                {
+                    int lt1 = st1 + d1.Duration;
+                    int lt2 = st2 + d2.Duration;
+                    if ((st1 > st2) && (lt1 < lt2))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    d3.remove(st1);
+                    if (d3.size() == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            //v1.updateDomain(d3, trail);
+            return true;
+        }
+
+        private static bool satisfyMETBY(Variable v1, Variable v2, Trail trail)
+        {
+            AllenDomain d1 = (AllenDomain)v1.Domain;
+            if (d1.Empty) return false;
+            AllenDomain d3 = (AllenDomain)d1.Clone();
+            AllenDomain d2 = (AllenDomain)v2.Domain;
+            if (d2.Empty) return false;
+            for (int st1 = d1.min(); st1 <= d1.max(); st1 += d1.Step)
+            {
+                bool found = false;
+                for (int st2 = d2.min(); st2 <= d2.max(); st2 += d2.Step)
+                {
+                    int lt2 = st2 + d2.Duration;
+                    if (lt2 == st1)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    d3.remove(st1);
+                    if (d3.size() == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            //v1.updateDomain(d3, trail);
+            return true;
+        }
+
+        private static bool satisfyMEETS(Variable v1, Variable v2, Trail trail)
+        {
+            AllenDomain d1 = (AllenDomain)v1.Domain;
+            if (d1.Empty) return false;
+            AllenDomain d3 = (AllenDomain)d1.Clone();
+            AllenDomain d2 = (AllenDomain)v2.Domain;
+            if (d2.Empty) return false;
+            for (int st1 = d1.min(); st1 <= d1.max(); st1 += d1.Step)
+            {
+                bool found = false;
+                for (int st2 = d2.min(); st2 <= d2.max(); st2 += d2.Step)
+                {
+                    int lt1 = st1 + d1.Duration;
+                    if (lt1 == st2)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    d3.remove(st1);
+                    if (d3.size() == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            //v1.updateDomain(d3, trail);
+            return true;
+        }
+
+        private static bool satisfyEQUALS(Variable v1, Variable v2, Trail trail)
+        {
+            AllenDomain d1 = (AllenDomain)v1.Domain;
+            if (d1.Empty) return false;
+            AllenDomain d3 = new AllenDomain(d1.min(), d1.max() + d1.Duration, d1.Duration, d1.Step);
+            AllenDomain d2 = (AllenDomain)v2.Domain;
+            if (d2.Empty) return false;
+            for (int st1 = d1.min(); st1 <= d1.max(); st1 += d1.Step)
+            {
+                bool found = false;
+                for (int st2 = d2.min(); st2 <= d2.max(); st2 += d2.Step)
+                {
+                    int lt1 = st1 + d1.Duration;
+                    int lt2 = st2 + d2.Duration;
+                    if ((st1 == st2) && (lt1 == lt2))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    d3.remove(st1);
+                    if (d3.size() == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            //v1.updateDomain(d3, trail);
+            return true;
+        }
+
+        private static bool satisfyPRECEDES(Variable v1, Variable v2, Trail trail)
+        {
+            AllenDomain d1 = (AllenDomain)v1.Domain;
+            if (d1.Empty) return false;
+            AllenDomain d3 = new AllenDomain(d1.min(), d1.max() + d1.Duration, d1.Duration, d1.Step);
+            AllenDomain d2 = (AllenDomain)v2.Domain;
+            if (d2.Empty) return false;
+            for (int st1 = d1.min(); st1 <= d1.max(); st1 += d1.Step)
+            {
+                bool found = false;
+                for (int st2 = d2.min(); st2 <= d2.max(); st2 += d2.Step)
+                {
+                    int lt1 = st1 + d1.Duration;
+                    if (lt1 < st2)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    d3.remove(st1);
+                    if (d3.size() == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            //v1.updateDomain(d3, trail);
+            return true;
+        }
+
+        private static bool satisfyPRECEDEDBY(Variable v1, Variable v2, Trail trail)
+        {
+            AllenDomain d1 = (AllenDomain)v1.Domain;
+            if (d1.Empty) return false;
+            AllenDomain d3 = (AllenDomain)d1.Clone();
+            AllenDomain d2 = (AllenDomain)v2.Domain;
+            if (d2.Empty) return false;
+            for (int st1 = d1.min(); st1 <= d1.max(); st1 += d1.Step)
+            {
+                bool found = false;
+                for (int st2 = d2.min(); st2 <= d2.max(); st2 += d2.Step)
+                {
+                    int lt2 = st2 + d2.Duration;
+                    if (lt2 < st1)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    d3.remove(st1);
+                    if (d3.size() == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            //v1.updateDomain(d3, trail);
+            return true;
+        }
+//**************************
+        public bool numericToSymbolic()
+        {
+            AllenDomain d1 = (AllenDomain) Vars[0].Domain;
+            AllenDomain d2 = (AllenDomain) Vars[1].Domain;
+            int latestEndTime1 = d1.max() + d1.Duration;
+            int latestEndTime2 = d2.max() + d2.Duration;
+
+            if ((latestEndTime1 < d2.min()) && (relation != AllenEvents.PRECEDES)) // precedes
+            {
+                return false;
+            }
+            if ((d1.min() > latestEndTime2) && (relation != AllenEvents.PRECEDEDBY)) // precededby
+            {
+                return false;
+            }
+            if (((d1.Duration != d2.Duration) ||
+                 ((latestEndTime2 - d1.min()) < d1.Duration) ||
+                 ((latestEndTime1 - d2.min()) < d1.Duration)))
+            {
+                if (relation == AllenEvents.EQUALS)
+                {
+                    return false;
+                }
+                if (d1.Duration > d2.Duration)
+                {
+                    if ((relation == AllenEvents.STARTS) || (relation == AllenEvents.FINISHES) ||
+                        (relation == AllenEvents.DURING))
+                    {
+                        return false;
+                    }
+                }
+                else if (d1.Duration < d2.Duration)
+                {
+                    if ((relation == AllenEvents.STARTEDBY) || (relation == AllenEvents.FINISHEDBY) 
+                     || (relation == AllenEvents.CONTAINS))
+                    {
+                        return false;
+                    }
+                }
+            }
+            if ((d1.Duration == d2.Duration) &&
+                ((relation == AllenEvents.DURING) || (relation == AllenEvents.CONTAINS)      ||
+                 (relation == AllenEvents.STARTS) || (relation == AllenEvents.STARTEDBY)     ||
+                 (relation == AllenEvents.FINISHES) || (relation == AllenEvents.FINISHEDBY)))
+            {
+                return false;
+            }
+            if (((d1.min()+d1.Duration) > (latestEndTime2-d2.Duration)) &&
+                ((relation == AllenEvents.MEETS) || (relation == AllenEvents.PRECEDES)))
+            {
+                return false;
+            }
+            if (((latestEndTime1-d1.Duration) < (d2.min()+d2.Duration)) &&
+                ((relation == AllenEvents.METBY) || (relation == AllenEvents.PRECEDEDBY)))
+            {
+                return false;
+            }
+            if ((d1.min() > (latestEndTime2-d2.Duration)) &&
+                ((relation == AllenEvents.STARTS) || (relation == AllenEvents.STARTEDBY)
+               || (relation == AllenEvents.CONTAINS)))
+            {
+                return false;
+            }
+            // the next is a new one
+            if ((d1.min() >= (latestEndTime2 - d2.Duration)) &&
+              (relation == AllenEvents.OVERLAPS))
+            {
+                return false;
+            }
+            
+            if (((d1.min()+d1.Duration) > latestEndTime2) &&
+                ((relation == AllenEvents.FINISHES) || (relation == AllenEvents.FINISHEDBY) || 
+                 (relation == AllenEvents.DURING)))
+            {
+                return false;
+            }
+            if ((latestEndTime1 < (d2.min()+d2.Duration)) &&
+                ((relation == AllenEvents.FINISHES) || relation == AllenEvents.FINISHEDBY))
+            {
+                return false;
+            }
+
+            if (((latestEndTime1 - d1.Duration) > (d2.min() + d2.Duration)) && (relation == AllenEvents.OVERLAPPEDBY))
+                // has been updated from < to >
+            {
+                return false;
+            }
+            if ((d1.min() < d2.min()) && (relation == AllenEvents.DURING))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public override String ToString()
+        {
+            String a = "";
+            switch (relation)
+            {
+
+                case AllenEvents.PRECEDES:
+                    a = "PRECEDES"; break;
+
+                case AllenEvents.PRECEDEDBY:
+                    a = "PRECEDEDBY"; break;
+
+                case AllenEvents.EQUALS:
+                    a = "EQUAL"; break;
+
+                case AllenEvents.MEETS:
+                    a = "MEET"; break;
+
+                case AllenEvents.METBY:
+                    a = "METBY"; break;
+
+                case AllenEvents.DURING:
+                    a = "DURING"; break;
+
+                case AllenEvents.CONTAINS:
+                    a = "CONTAINS"; break;
+
+                case AllenEvents.STARTS:
+                    a = "STARTS"; break;
+
+                case AllenEvents.STARTEDBY:
+                    a = "STARTEDBY"; break;
+
+                case AllenEvents.FINISHES:
+                    a = "FINISHES"; break;
+
+                case AllenEvents.FINISHEDBY:
+                    a = "FINISHEDBY"; break;
+
+                case AllenEvents.OVERLAPS:
+                    a = "OVERLAP"; break;
+
+                case AllenEvents.OVERLAPPEDBY:
+                    a = "OVERLAPPEDBY"; break;
+            }
+            return "AllenConstraint(" + a + "," + toString(v) + ")";
+        }
+    }
+}

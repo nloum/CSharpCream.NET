@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
+  <Class Name="Cream.Domain">
+    <Position X="5.25" Y="0.5" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>ABAABAAEAADAABAAAIJAAQAIAAAAAAIAAAAAAAAAABA=</HashCode>
+      <FileName>Domain.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Cream.IntDomain">
+    <Position X="0.5" Y="0.5" Width="4.25" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Class Name="Cream.IntDomain.AnonymousClassIterator">
+        <TypeIdentifier>
+          <NewMemberFileName>IntDomain.cs</NewMemberFileName>
+        </TypeIdentifier>
+        <Lollipop Position="0.2" />
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AJAAFAAEAADQABAEQAFABQSKAQAAACCABAACAABAABA=</HashCode>
+      <FileName>IntDomain.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

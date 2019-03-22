@@ -1,0 +1,255 @@
+using System;
+
+namespace  Cream
+{
+	
+	public class Serialized:Constraint
+	{
+		private Variable[] v;
+		private int[] l;
+		private int[] order;
+
+        public Serialized(Network net, Variable[] v, int[] l)
+            : this(net, v,l, ConstraintTypes.Hard)
+        {
+        }
+
+        public Serialized(Network net, Variable[] v, int[] l, ConstraintTypes cType)
+            : this(net, v, l, cType, 0)
+        {
+        }
+
+        public Serialized(Network net, Variable[] v, int[] l, ConstraintTypes cType, int weight)
+            : base(net, cType, weight)
+        {
+            this.v = new Variable[v.Length];
+            v.CopyTo(this.v, 0);
+            this.l = new int[l.Length];
+            l.CopyTo(this.l, 0);
+            order = null;
+        }
+
+        protected internal override Constraint copy(Network net)
+		{
+			return new Serialized(net, Constraint.copy(v, net), l);
+		}
+		
+		protected internal class SerializedCondition:Condition
+		{
+			private class AnonymousClassComparator : System.Collections.IComparer
+			{
+				public AnonymousClassComparator(SerializedCondition enclosingInstance)
+				{
+					InitBlock(enclosingInstance);
+				}
+				private void  InitBlock(SerializedCondition enclosing_Instance)
+				{
+					Enclosing_Instance = enclosing_Instance;
+				}
+
+			    public SerializedCondition Enclosing_Instance { get; set; }
+
+			    public virtual int Compare(Object o1, Object o2)
+				{
+					int k1 = ((int[]) o1)[1];
+					int k2 = ((int[]) o2)[1];
+					return (k1 < k2)?- 1:((k1 == k2)?0:1);
+				}
+			}
+			private void  InitBlock(Serialized enclosing_Instance)
+			{
+				Enclosing_Instance = enclosing_Instance;
+			}
+			private Serialized enclosingInstance;
+			override public Network To
+			{
+				set
+				{
+					Serialized s = (Serialized) value.getConstraint(index);
+					if (code == null)
+					{
+						s.order = null;
+					}
+					else
+					{
+						s.order = new int[code.Length];
+						for (int i = 0; i < s.order.Length; i++)
+						{
+							s.order[i] = code[i][0];
+						}
+					}
+				}
+				
+			}
+			public Serialized Enclosing_Instance
+			{
+				get
+				{
+					return enclosingInstance;
+				}
+                set
+                {
+                    enclosingInstance = value;
+                }
+				
+			}
+			private int[][] code;
+			
+			public SerializedCondition(Serialized enclosingInstance)
+			{
+				InitBlock(enclosingInstance);
+				index = Enclosing_Instance.Index;
+				code = new int[Enclosing_Instance.v.Length][];
+				for (int i = 0; i < Enclosing_Instance.v.Length; i++)
+				{
+					code[i] = new int[3];
+				}
+				for (int i = 0; i < code.Length; i++)
+				{
+					Domain d = Enclosing_Instance.v[i].Domain;
+					code[i][0] = i;
+					code[i][1] = ((IntDomain) d).value_();
+					code[i][2] = Enclosing_Instance.l[i];
+				}
+				System.Collections.IComparer comp = new AnonymousClassComparator(this);
+				Array.Sort(code, comp);
+			}
+			
+			public override System.Collections.IList operations()
+			{
+				System.Collections.IList operations = new System.Collections.ArrayList();
+				for (int i = 0; i < code.Length - 1; i++)
+				{
+					if (code[i][1] + code[i][2] == code[i + 1][1])
+					{
+						// adjacent
+						Operation op = new Swap(Enclosing_Instance, index, i, i + 1);
+						operations.Add(op);
+					}
+				}
+				return operations;
+			}
+		}
+		
+		private class Swap:Operation
+		{
+			private void  InitBlock(Serialized enclosing_Instance)
+			{
+				Enclosing_Instance = enclosing_Instance;
+			}
+
+		    public Serialized Enclosing_Instance { get; set; }
+
+		    new private int index;
+			private int i;
+			private int j;
+			
+			public Swap(Serialized enclosingInstance, int index, int i, int j)
+			{
+				InitBlock(enclosingInstance);
+				this.index = index;
+				this.i = i;
+				this.j = j;
+			}
+			
+			public override void  applyTo(Network network)
+			{
+				Serialized s = (Serialized) network.getConstraint(index);
+				int t = s.order[i]; s.order[i] = s.order[j]; s.order[j] = t;
+			}
+			
+			public override bool isTaboo(Operation op)
+			{
+				if (!(op is Swap))
+					return false;
+				Swap swap = (Swap) op;
+				return index == swap.index && i == swap.i && j == swap.j;
+			}
+		}
+		
+		protected internal override void  clearCondition()
+		{
+			order = null;
+		}
+		
+		protected internal override Condition extractCondition()
+		{
+			return new SerializedCondition(this);
+		}
+		
+		protected internal override bool isModified()
+		{
+			return isModified(v);
+		}
+		
+		private bool satisfySequential(Trail trail)
+		{
+			if (order == null)
+				return true;
+			for (int k = 0; k < order.Length - 1; k++)
+			{
+				int i = order[k];
+				int j = order[k + 1];
+				IntDomain d0 = (IntDomain) v[i].Domain;
+				IntDomain d1 = (IntDomain) v[j].Domain;
+				int diffMin = d1.max() - l[i] + 1;
+				int diffMax = d0.min() + l[i] - 1;
+				d0 = d0.delete(diffMin, IntDomain.MAX_VALUE);
+				if (d0.Empty)
+					return false;
+				d1 = d1.delete(IntDomain.MIN_VALUE, diffMax);
+				if (d1.Empty)
+					return false;
+                if (trail != null)
+                {
+                    v[i].updateDomain(d0, trail);
+                    v[j].updateDomain(d1, trail);
+                }
+			}
+			return true;
+		}
+		
+		private bool satisfySerialized(Trail trail)
+		{
+			for (int i = 0; i < v.Length; i++)
+			{
+				for (int j = 0; j < v.Length; j++)
+				{
+					if (i == j)
+						continue;
+					IntDomain d0 = (IntDomain) v[i].Domain;
+					IntDomain d1 = (IntDomain) v[j].Domain;
+					int diffMin = d1.max() - l[i] + 1;
+					int diffMax = d1.min() + l[j] - 1;
+					if (diffMin <= diffMax)
+					{
+						d0 = d0.delete(diffMin, diffMax);
+						if (d0.Empty)
+							return false;
+                        if (trail != null)
+                        {
+                            v[i].updateDomain(d0, trail);
+                        }
+					}
+				}
+			}
+			return true;
+		}
+
+        protected internal override bool isSatisfied()
+        {
+            return satisfy(null);
+        }
+        protected internal override bool satisfy(Trail trail)
+		{
+			if (!satisfySequential(trail))
+				return false;
+			return satisfySerialized(trail);
+		}
+		
+		public override String ToString()
+		{
+			return "Serialized(" + Constraint.toString(v) + "," + Constraint.toString(l) + ")";
+		}
+	}
+}

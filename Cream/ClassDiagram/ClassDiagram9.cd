@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
+  <Class Name="Cream.Solver">
+    <Position X="0.5" Y="0.5" Width="5.5" />
+    <NestedTypes>
+      <Class Name="Cream.Solver.HandlerInvoker">
+        <TypeIdentifier>
+          <NewMemberFileName>Solver.cs</NewMemberFileName>
+        </TypeIdentifier>
+        <Lollipop Position="0.2" />
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>CAAAAhAQAQAQgBEsCQCogCgQkCgsAkYABIAGAAAAEgI=</HashCode>
+      <FileName>Solver.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Cream.DefaultSolver">
+    <Position X="6.5" Y="0.75" Width="3.75" />
+    <TypeIdentifier>
+      <HashCode>ICAAACAAQAIEAAAAEAAAAAAIAACACAAAAAAAAAAAAII=</HashCode>
+      <FileName>DefaultSolver.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Cream.ParallelSolver">
+    <Position X="6.5" Y="5.75" Width="3.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAgAAAAAAAARAAAAAQAAAAAAgCAAAAAAAAAAAAAI=</HashCode>
+      <FileName>ParallelSolver.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

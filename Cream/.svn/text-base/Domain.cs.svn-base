@@ -1,0 +1,59 @@
+/*
+* @(#)Domain.cs
+*/
+using System;
+using  Cream;
+namespace  Cream
+{
+	
+	/// <summary> Domains.
+	/// This is an abstract class for domains.
+	/// A domain ...
+	/// </summary>
+	/// <seealso cref="Variable">
+	/// </seealso>
+	/// <since> 1.0
+	/// </since>
+	/// <version>  1.0, 01/12/08
+	/// </version>
+    /// <author>  Based on Java Solver by : Naoyuki Tamura (tamura@kobe-u.ac.jp) 
+    ///           C#: Ali Hmer (Hmer200a@uregina.ca)
+	/// </author>
+	public abstract class Domain : ICloneable
+	{
+		virtual public bool Empty
+		{
+			get
+			{
+				return size() == 0;
+			}
+			
+		}
+		protected internal int size__Field = 0;
+		
+		public virtual int size()
+		{
+			return size__Field;
+		}
+		
+		public abstract Object Clone();
+		
+		public abstract bool equals(Domain d);
+		
+		public abstract System.Collections.IEnumerator elements();
+		
+		public abstract Object element();
+		
+		public abstract bool contains(Object o);
+		
+		public abstract Domain insert(Object o);
+		
+		public abstract Domain delete(Object o);
+		
+		public abstract Domain cap(Domain d);
+		
+		public abstract Domain cup(Domain d);
+		
+		public abstract Domain difference(Domain d);
+	}
+}

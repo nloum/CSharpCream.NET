@@ -1,0 +1,81 @@
+﻿namespace Cream.CourseAssignment
+{
+    public class Count:Constraint
+    {
+        private Variable[] v;
+
+        public Count(Network net, Variable[] v)
+            : base(net)
+        {
+            this.v = new Variable[v.Length];
+            v.CopyTo(this.v, 0);
+        }
+
+        public Count(Network net, Variable[] v, ConstraintTypes cType)
+            : base(net, cType)
+        {
+            this.v = new Variable[v.Length];
+            v.CopyTo(this.v, 0);
+        }
+
+        public Count(Network net)
+            : base(net)
+        {
+        }
+
+        public Count(Network net, ConstraintTypes cType)
+            : base(net, cType)
+        {
+        }
+
+        protected internal override Constraint copy(Network net)
+        {
+            return new NotEquals(net, copy(v, net));
+        }
+
+        protected internal override bool isModified()
+        {
+            return isModified(v);
+        }
+
+        protected internal override bool isSatisfied()
+        {
+            return satisfy(null);
+        }
+        protected internal override bool satisfy(Trail trail)
+        {
+            CourseNetwork net = (CourseNetwork) Network;
+            int[] prof = new int[net.Professors.Count];
+            foreach (Variable var in v)
+            {
+                if (!var.IsValueType)
+                {
+                    Domain d = var.Domain;
+                    if (d.size() != 1)
+                        continue;
+                    prof[(int) d.element()]++;
+                    if (prof[(int) d.element()] > ((Professor) net.Professors[(int) d.element()]).Courses)
+                    {
+                        return false;
+                    }
+                    if (prof[(int) d.element()] == ((Professor) net.Professors[(int) d.element()]).Courses)
+                    {
+                        foreach (Variable va in v)
+                        {
+                            if ((va != var) && (va.Domain.size() != 1))
+                            {
+                                IntDomain newD = (IntDomain) va.Domain;
+                                newD = (IntDomain) newD.delete(d.element());
+                                if (trail != null)
+                                {
+                                    va.updateDomain(newD, trail);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+    }
+}

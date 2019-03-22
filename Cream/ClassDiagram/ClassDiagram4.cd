@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" GroupingSetting="Access" MembersFormat="FullSignature">
+  <Class Name="Cream.Condition">
+    <Position X="3.5" Y="2.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAgAAAAAAAAAAAAAIAAAAAAAAAAABAAA=</HashCode>
+      <FileName>Condition.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Cream.Monitor">
+    <Position X="6.5" Y="0.5" Width="4" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Delegate Name="Cream.Monitor.SetTextCallback" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Monitor.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Class Name="Cream.Monitor.AnonymousClassActionListener" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Monitor.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Class Name="Cream.Monitor.AnonymousClassActionListener1" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Monitor.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>IECIgIAAAAAAABBAAAwsAAAAEAAAQALIAAIAiEAOEAA=</HashCode>
+      <FileName>Monitor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Cream.Operation">
+    <Position X="3.5" Y="0.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEABACA=</HashCode>
+      <FileName>Operation.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="Cream.SolutionHandler">
+    <Position X="0.5" Y="0.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAA=</HashCode>
+      <FileName>SolutionHandler.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="IThreadRunnable">
+    <Position X="0.5" Y="1.75" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI=</HashCode>
+      <FileName>SupportClass.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

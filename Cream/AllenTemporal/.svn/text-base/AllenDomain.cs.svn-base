@@ -1,0 +1,588 @@
+﻿using System;
+using System.Collections;
+
+namespace Cream.AllenTemporal
+{
+    public class AllenDomain: Domain
+    {
+        #region Internal Classes
+
+        private class AllenDomainIterator : IEnumerator
+        {
+            #region Private Fields
+
+            private int mi, ma, d, s, choice;
+            private AllenDomain enclosingInstance;
+
+            #endregion
+
+            #region Constructor
+            public AllenDomainIterator(AllenDomain enclosingInstance)
+			{
+				InitBlock(enclosingInstance);
+			}
+			
+            #endregion
+
+            #region Private Methods
+
+            private void  InitBlock(AllenDomain eI)
+			{
+				enclosingInstance = eI;
+                mi = Enclosing_Instance.min__Field;
+                choice = mi;
+                ma = Enclosing_Instance.max__Field;
+                d = Enclosing_Instance.Duration;
+                s = Enclosing_Instance.step;
+
+            }
+
+            #endregion
+
+            #region Properties
+
+            public virtual Object Current
+			{
+				get
+				{
+					//if (!MoveNext())
+					//	throw new ArgumentOutOfRangeException();
+					AllenDomain dom = new AllenDomain(choice, choice+d, d, s);  //ma+d
+					//choice+=s;
+					return dom;
+				}
+
+            }
+
+            public AllenDomain Enclosing_Instance
+            {
+                get
+                {
+                    return enclosingInstance;
+                }
+
+            }
+            #endregion 
+
+            #region Public Methods
+
+            public virtual bool MoveNext()
+			{
+				if (Enclosing_Instance.size__Field == 0)
+					return false;
+				while (choice <= Enclosing_Instance.max__Field)
+				{
+                    if (Enclosing_Instance.contains(choice))
+						return true;
+                    choice+= s;
+                }
+				return false;
+			}
+			
+			public virtual void  remove()
+			{
+				throw new NotSupportedException();
+			}
+			
+            virtual public void  Reset()
+			{
+            }
+
+            #endregion 
+        }
+
+        #endregion
+
+        #region Public Fields
+
+        public const int MIN_VALUE = unchecked((int) 0xc0000001);
+        public const int MAX_VALUE = 0x3fffffff;
+        public static AllenDomain EMPTY = new AllenDomain();
+        public static AllenDomain FULL = new AllenDomain(MIN_VALUE, MAX_VALUE);
+
+        #endregion
+
+        #region Private Fields
+
+        private ArrayList intervals = new ArrayList();
+        private int step;
+        private int duration;
+        private int min__Field;
+		private int max__Field;
+
+        #endregion
+
+        #region Constructors
+
+        public AllenDomain()
+		{
+		}
+
+        /// <summary>
+        /// AllenDomain Constructor with a starting time and latest time only
+        /// The duration and step here are assumed 1
+        /// </summary>
+        /// <param name="st">starting time</param>
+        /// <param name="lt">latest time</param>
+        public AllenDomain(int st, int lt):this(st, lt, 1, 1)
+        {
+        }
+
+        public AllenDomain(int st, int lt, int duration): this(st, lt, duration, 1)
+        {
+            
+        }
+
+        /// <summary>
+        /// AllenDomain Constructor with a starting time, latest time, duration and a step
+        /// </summary>
+        /// <param name="st">starting time</param>
+        /// <param name="lt">latest time</param>
+        /// <param name="duration">duration</param>
+        /// <param name="step">step</param>
+        public AllenDomain(int st, int lt, int duration, int step)
+		{
+			int mi = Math.Max(st, MIN_VALUE);
+            int ma = lt - duration; 
+			ma = Math.Min(ma, MAX_VALUE);
+			if (mi <= ma)
+			{
+			    int[] interval;
+                if (step == 1)
+                {
+                    interval = new int[] {mi, ma};
+                    intervals.Add(interval);
+                }
+                else
+                {
+                    for (int i=mi; i<=ma; i+=step)
+                    {
+                        interval = new int[] { i, i};
+                        intervals.Add(interval);
+                    }
+                }
+				size__Field = ma - mi + 1;
+				min__Field = mi;
+				max__Field = ma;
+			    this.step = step;
+			    this.duration = duration;
+                updateSize();
+			}
+            else
+			{
+			    throw new NotSupportedException("Maximum time must be greater than or equal minimum time!!!");
+			}
+        }
+
+        #endregion
+
+        #region Properties
+
+        public int Duration
+        {
+            get 
+            {
+                return duration;
+            }
+        }
+
+        public  int Step
+        {
+            get
+            {
+                return step;
+            }
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private void updateSize()
+        {
+            size__Field = 0;
+            try
+            {
+                for (int i = 0; i < intervals.Count; ++i)
+                {
+                    int[] interval = (int[])intervals[i];
+                    size__Field += interval[1] - interval[0] + 1;
+                }
+            }
+            catch (IndexOutOfRangeException)
+            {
+            }
+        }
+
+        private void updateMinMax()
+        {
+            if (size__Field > 0)
+            {
+                try
+                {
+                    int[] interval = (int[])intervals[0];
+                    min__Field = interval[0];
+                    interval = (int[])intervals[intervals.Count - 1];
+                    max__Field = interval[1];
+                }
+                catch (IndexOutOfRangeException)
+                {
+                }
+            }
+        }
+
+        private int indexOf(int elem)
+        {
+            if (elem < min__Field || max__Field < elem)
+                return -1;
+            try
+            {
+                for (int i = 0; i < intervals.Count; i++)
+                {
+                    int[] interval = (int[])intervals[i];
+                    if (elem < interval[0])
+                        return -1;
+                    if (elem <= interval[1])
+                        return i;
+                }
+            }
+            catch (IndexOutOfRangeException)
+            {
+            }
+            return -1;
+        }
+
+        public int indexOf(Object o)
+        {
+            if (!(o is ValueType))
+                return -1;
+            return indexOf(Convert.ToInt32(o));
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        public override bool equals(Domain d0)
+        {
+            if (this == d0)
+                return true;
+            if (!(d0 is AllenDomain))
+                return false;
+            AllenDomain d = (AllenDomain)d0;
+            if (intervals.Count != d.intervals.Count)
+                return false;
+            try
+            {
+                for (int i = 0; i < intervals.Count; i++)
+                {
+                    int[] i0 = (int[])intervals[i];
+                    int[] i1 = (int[])d.intervals[i];
+                    if (i0[0] != i1[0] || i0[1] != i1[1])
+                        return false;
+                }
+            }
+            catch (IndexOutOfRangeException)
+            {
+            }
+            return true;
+        }
+
+        public override Object Clone()
+        {
+            AllenDomain d = new AllenDomain();
+            try
+            {
+                for (int i = 0; i < intervals.Count; ++i)
+                {
+                    d.intervals.Add(((int[])intervals[i]).Clone());
+                }
+            }
+            catch (IndexOutOfRangeException)
+            {
+            }
+            d.size__Field = size__Field;
+            d.min__Field = min__Field;
+            d.max__Field = max__Field;
+            d.step = step;
+            d.duration = duration;
+            return d;
+        }
+
+        public override IEnumerator elements()
+        {
+            IEnumerator iter = new AllenDomainIterator(this);
+            return iter;
+        }
+
+        public virtual int min()
+        {
+            if (size__Field == 0)
+                throw new ArgumentOutOfRangeException();
+            return min__Field;
+        }
+
+        public virtual int max()
+        {
+            if (size__Field == 0)
+                throw new ArgumentOutOfRangeException();
+            return max__Field;
+        }
+
+        public virtual int value_()
+        {
+            if (size__Field != 1)
+                throw new ArgumentOutOfRangeException();
+            return min__Field;
+        }
+
+        public override Object element()
+        {
+            return value_();
+        }
+
+        public virtual bool contains(int elem)
+        {
+            return indexOf(elem) >= 0;
+        }
+
+        public override bool contains(Object o)
+        {
+            if (!(o is ValueType))
+                return false;
+            return contains(Convert.ToInt32(o));
+        }
+
+        public override Domain insert(Object o)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void remove(int elem)
+        {
+            int i = indexOf(elem);
+            if (i < 0)
+                return;
+            try
+            {
+                int[] interval = (int[])intervals[i];
+                int lo = interval[0];
+                int hi = interval[1];
+                if (elem == lo && elem == hi)
+                {
+                    intervals.RemoveAt(i);
+                }
+                else if (elem == lo)
+                {
+                    interval[0] = lo + 1;
+                }
+                else if (elem == hi)
+                {
+                    interval[1] = hi - 1;
+                }
+                else
+                {
+                    interval[0] = elem + 1;
+                    intervals.Insert(i, new int[] { lo, elem - 1 });
+                }
+                size__Field--;
+                if (size__Field > 0)
+                {
+                    updateMinMax();
+                }
+                else
+                {
+                    
+                }
+            }
+            catch (IndexOutOfRangeException)
+            {
+            }
+        }
+
+        public virtual void remove(Object o)
+        {
+            if (!(o is ValueType))
+                return;
+            remove(Convert.ToInt32(o));
+        }
+
+        public virtual AllenDomain delete(int elem)
+        {
+            if (!contains(elem))
+                return this;
+            AllenDomain d = (AllenDomain)Clone();
+            d.remove(elem);
+            return d;
+        }
+
+        public override Domain delete(Object o)
+        {
+            if (!(o is ValueType))
+                return this;
+            return delete(Convert.ToInt32(o));
+        }
+
+        public virtual AllenDomain delete(int lo, int hi)
+        {
+            if (size__Field == 0 || lo > hi || hi < min__Field || max__Field < lo)
+                return this;
+            if (lo == hi)
+                return delete(lo);
+            AllenDomain d = new AllenDomain();
+            try
+            {
+                for (int i = 0; i < intervals.Count; i++)
+                {
+                    int[] interval = (int[])intervals[i];
+                    int mi = Math.Max(lo, interval[0]);
+                    int ma = Math.Min(hi, interval[1]);
+                    if (mi <= ma)
+                    {
+                        if (interval[0] < mi)
+                        {
+                            int[] in_ = new int[2];
+                            in_[0] = interval[0];
+                            in_[1] = mi - 1;
+                            d.intervals.Add(in_);
+                        }
+                        if (ma < interval[1])
+                        {
+                            int[] in_ = new int[2];
+                            in_[0] = ma + 1;
+                            in_[1] = interval[1];
+                            d.intervals.Add(in_);
+                        }
+                    }
+                    else
+                    {
+                        int[] in_ = new int[2];
+                        in_[0] = interval[0];
+                        in_[1] = interval[1];
+                        d.intervals.Add(in_);
+                    }
+                }
+            }
+            catch (IndexOutOfRangeException)
+            {
+            }
+            d.updateSize();
+            d.updateMinMax();
+            return d;
+        }
+
+        public override Domain cap(Domain d)
+        {
+            if (!(d is AllenDomain))
+                return EMPTY;
+            AllenDomain new_d = new AllenDomain();
+            AllenDomain d0 = this;
+            AllenDomain d1 = (AllenDomain)d;
+            try
+            {
+                int i0 = 0;
+                int i1 = 0;
+                while (i0 < d0.intervals.Count && i1 < d1.intervals.Count)
+                {
+                    int[] interval = (int[])d0.intervals[i0];
+                    int min0 = interval[0];
+                    int max0 = interval[1];
+                    interval = (int[])d1.intervals[i1];
+                    int min1 = interval[0];
+                    int max1 = interval[1];
+                    if (max0 < min1)
+                    {
+                        i0++;
+                        continue;
+                    }
+                    if (max1 < min0)
+                    {
+                        i1++;
+                        continue;
+                    }
+                    interval = new int[2];
+                    interval[0] = Math.Max(min0, min1);
+                    interval[1] = Math.Min(max0, max1);
+                    new_d.intervals.Add(interval);
+                    if (max0 <= max1)
+                        i0++;
+                    if (max1 <= max0)
+                        i1++;
+                }
+            }
+            catch (IndexOutOfRangeException)
+            {
+            }
+            new_d.updateSize();
+            new_d.updateMinMax();
+            if (new_d.Empty)
+                return EMPTY;
+            return new_d;
+        }
+
+        public override Domain cup(Domain d)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Domain difference(Domain d)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual AllenDomain capInterval(int lo, int hi)
+        {
+            AllenDomain d = this;
+            if (MIN_VALUE < lo)
+                d = d.delete(MIN_VALUE, lo - 1);
+            if (hi < MAX_VALUE)
+                d = d.delete(hi + 1, MAX_VALUE);
+            return d;
+        }
+
+        private static String toString(int x)
+        {
+            if (x == MIN_VALUE)
+            {
+                return "min";
+            }
+            else if (x == MAX_VALUE)
+            {
+                return "max";
+            }
+            else
+            {
+                return Convert.ToString(x);
+            }
+        }
+
+        public override String ToString()
+        {
+            String s = "";
+            String delim = "";
+            try
+            {
+                for (int i = 0; i < intervals.Count; i++)
+                {
+                    int[] interval = (int[])intervals[i];
+                    s += (delim + toString(interval[0]));
+                    if (interval[0] < interval[1])
+                    {
+                        s += ("-" + toString(interval[1]));
+                    }
+                    delim = ",";
+                }
+            }
+            catch (IndexOutOfRangeException)
+            {
+            }
+            if (size() == 1)
+            {
+                return s;
+            }
+            return "{" + s + "}";
+        }
+
+        #endregion
+    }
+}

@@ -1,0 +1,288 @@
+using System;
+using System.Drawing;
+using  Cream;
+using System.Collections;
+namespace  Cream
+{
+	
+	[Serializable]
+	public class Monitor:System.Windows.Forms.Form
+	{
+        delegate void SetTextCallback(string text);
+        
+        private class AnonymousClassActionListener
+		{
+			public AnonymousClassActionListener(Monitor enclosingInstance)
+			{
+				InitBlock(enclosingInstance);
+			}
+			private void  InitBlock(Monitor enclosing_Instance)
+			{
+				Enclosing_Instance = enclosing_Instance;
+			}
+			private Monitor enclosingInstance;
+			public Monitor Enclosing_Instance
+			{
+				get
+				{
+					return enclosingInstance;
+				}
+                set
+                {
+                    enclosingInstance = value;
+                }
+				
+			}
+			public virtual void  actionPerformed(Object event_sender, EventArgs e)
+			{
+				Enclosing_Instance.Dispose();
+			}
+		}
+		private class AnonymousClassActionListener1
+		{
+		    private Monitor enclosingInstance; //added
+
+			public AnonymousClassActionListener1(Monitor enclosingInstance)
+			{
+				InitBlock(enclosingInstance);
+			}
+			private void  InitBlock(Monitor enclosing_Instance)
+			{
+				EnclosingInstance = enclosing_Instance;
+			}
+//			private Monitor enclosingInstance;
+
+			public Monitor EnclosingInstance
+			{
+				get
+				{
+					return enclosingInstance;
+				}
+                set
+                {
+                    enclosingInstance = value;
+                }
+				
+			}
+
+			public virtual void  actionPerformed(Object event_sender, EventArgs e)
+			{
+				Environment.Exit(0);
+			}
+		}
+		private long startTime;
+		private ArrayList solvers;
+        private Hashtable solverData;
+		private int current_x;
+		private int xmin;
+		private int xmax;
+		private int ymin;
+		private int ymax;
+		
+		private Image image = null;
+		private long prevPaintTime;
+		private int topMargin = 100;
+		private int botMargin = 50;
+		private int leftMargin = 50;
+		private int rightMargin = 50;
+		private double xscale;
+		private double yscale;
+		private Color[] color = new Color[]{Color.Red, Color.Blue, Color.FromArgb(0, 128, 0), Color.FromArgb(0, 128, 128), Color.Magenta, Color.Green, Color.FromArgb(128, 128, 0), Color.Pink};
+		
+		public Monitor()
+		{
+			init();
+			Size = new Size(800, 600);
+			FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable;
+			MaximizeBox = true;
+			System.Windows.Forms.MenuItem close = new System.Windows.Forms.MenuItem("Close");
+			close.Click += new AnonymousClassActionListener(this).actionPerformed;
+			SupportClass.CommandManager.CheckCommand(close);
+			System.Windows.Forms.MenuItem quit = new System.Windows.Forms.MenuItem("Quit");
+			quit.Click += new AnonymousClassActionListener1(this).actionPerformed;
+			SupportClass.CommandManager.CheckCommand(quit);
+			System.Windows.Forms.MenuItem menu = new System.Windows.Forms.MenuItem("Window");
+			menu.MenuItems.Add(close);
+			menu.MenuItems.Add(quit);
+			System.Windows.Forms.MainMenu mb = new System.Windows.Forms.MainMenu();
+			mb.MenuItems.Add(menu);
+			Menu = mb;
+			//setsetBackground(Color.White);
+			Invalidate();
+			Visible = true;
+		}
+		
+		public virtual void  init()
+		{
+			lock (this)
+			{
+				startTime = (DateTime.Now.Ticks - 621355968000000000) / 10000;
+				solvers = new ArrayList();
+				solverData = new Hashtable();
+				current_x = 0;
+				setX(0, 10);
+				ymin = Int32.MaxValue;
+				ymax = Int32.MinValue;
+			}
+		}
+		
+		public virtual void  setX(int x_min, int x_max)
+		{
+			lock (this)
+			{
+				xmin = Math.Max(0, x_min);
+				xmax = Math.Max(xmin + 60, x_max);
+			}
+		}
+		
+		public virtual void  add(Solver solver)
+		{
+			lock (this)
+			{
+				solvers.Add(solver);
+			}
+		}
+		
+		public virtual void  addData(Solver solver, int y)
+		{
+			lock (this)
+			{
+				long t0 = (DateTime.Now.Ticks - 621355968000000000) / 10000;
+				int x = (int) ((t0 - startTime) / 1000);
+				int j = x - xmin;
+				if (x < xmin)
+					return ;
+				if (x > xmax)
+				{
+					xmax = xmin + 4 * j / 3;
+					if (xmax % 60 != 0)
+						xmax += 60 - xmax % 60;
+				}
+				current_x = Math.Max(current_x, x);
+				ymin = Math.Min(ymin, y);
+				ymax = Math.Max(ymax, y);
+				Int32[] data = (Int32[]) solverData[solver];
+				if (data == null)
+				{
+					data = new Int32[xmax - xmin];
+					solverData.Add(solver, data);
+				}
+				if (j >= data.Length)
+				{
+					Int32[] newData = new Int32[4 * j / 3];
+					for (int i = 0; i < data.Length; i++)
+						newData[i] = data[i];
+					data = newData;
+					solverData.Add(solver, data);
+				}
+				data[j] = y;
+				if (image == null || t0 - prevPaintTime >= 1000)
+				{
+					RefreshThis("d");
+					prevPaintTime = t0;
+				}
+			}
+		}
+		
+        private void RefreshThis(String text)
+        {
+            if (this.InvokeRequired)
+            {
+                SetTextCallback d = new SetTextCallback(RefreshThis);
+                this.Invoke(d, new object[] { text });
+            }
+            else
+            {
+                this.Refresh();
+            }
+            
+        }
+		private int wpos(int x)
+		{
+			return leftMargin + (int) (xscale * (x - xmin));
+		}
+		
+		private int hpos(int y)
+		{
+			return topMargin + (int) (yscale * (ymax - y));
+		}
+		
+		private void  drawLine(Graphics g, int x0, int y0, int x1, int y1)
+		{
+			g.DrawLine(SupportClass.GraphicsManager.manager.GetPen(g), wpos(x0), hpos(y0), wpos(x1), hpos(y1));
+		}
+		
+		private void  updateImage(int width, int height)
+		{
+			lock (this)
+			{
+				image = new Bitmap(width, height);
+				int w = width - (leftMargin + rightMargin);
+				int h = height - (topMargin + botMargin);
+				if (w <= 0 || h <= 0)
+					return ;
+				if (xmin >= xmax || ymin >= ymax)
+					return ;
+				xscale = w / (double) (xmax - xmin);
+				yscale = h / (double) (ymax - ymin);
+				Graphics g = Graphics.FromImage(image);
+				// x-axis
+				/////////////g.setColor(Color.LightGray);
+				drawLine(g, xmin, ymin, xmax, ymin);
+				drawLine(g, xmin, ymax, xmax, ymax);
+				////////////////////g.setColor(Color.Black);
+				g.DrawString(Convert.ToString(xmax), SupportClass.GraphicsManager.manager.GetFont(g), SupportClass.GraphicsManager.manager.GetBrush(g), wpos(xmax), hpos(ymin) + botMargin / 4 - SupportClass.GraphicsManager.manager.GetFont(g).GetHeight());
+				// y-axis
+				drawLine(g, xmin, ymin, xmin, ymax);
+				g.DrawString(Convert.ToString(ymin), SupportClass.GraphicsManager.manager.GetFont(g), SupportClass.GraphicsManager.manager.GetBrush(g), leftMargin / 3, hpos(ymin) + 5 - SupportClass.GraphicsManager.manager.GetFont(g).GetHeight());
+				g.DrawString(Convert.ToString(ymax), SupportClass.GraphicsManager.manager.GetFont(g), SupportClass.GraphicsManager.manager.GetBrush(g), leftMargin / 3, hpos(ymax) + 5 - SupportClass.GraphicsManager.manager.GetFont(g).GetHeight());
+				g.DrawString("time=" + current_x, SupportClass.GraphicsManager.manager.GetFont(g), SupportClass.GraphicsManager.manager.GetBrush(g), wpos(xmin), hpos(ymin) + botMargin / 2 - SupportClass.GraphicsManager.manager.GetFont(g).GetHeight());
+				
+				for (int i = 0; i < solvers.Count; i++)
+				{
+					Solver solver = (Solver) solvers[i];
+                    
+					Int32?[] data = (Int32?[]) solverData[solver];
+					if (data == null)
+						continue;
+					SupportClass.GraphicsManager.manager.SetColor(g, color[i % color.Length]);
+					String msg = solver + "=" + solver.BestValue;
+					g.DrawString(msg, SupportClass.GraphicsManager.manager.GetFont(g), SupportClass.GraphicsManager.manager.GetBrush(g), wpos(xmin) + 100 * (i + 1), hpos(ymin) + botMargin / 2 - SupportClass.GraphicsManager.manager.GetFont(g).GetHeight());
+					int? x0 = - 1;
+					int? y0 = - 1;
+					for (int j = 0; j < data.Length; j++)
+					{
+						if (data[j] == null)
+							continue;
+						int? x = xmin + j;
+						int? y = data[j];
+						if (x0 >= 0)
+						{
+							drawLine(g, (Int32)x0, (Int32)y0, (Int32)x, (Int32)y);
+						}
+						x0 = x;
+						y0 = y;
+					}
+				}
+			}
+		}
+		
+		public void  update(Graphics g)
+		{
+			Size size = Size;
+			updateImage(size.Width, size.Height);
+			g.DrawImage(image, 0, 0);
+		}
+		
+		protected override void  OnPaint(System.Windows.Forms.PaintEventArgs g_EventArg)
+		{
+			Graphics g = null;
+			if (g_EventArg != null)
+				g = g_EventArg.Graphics;
+			if (image != null)
+			{
+			    if (g != null) g.DrawImage(image, 0, 0);
+			}
+		}
+	}
+}

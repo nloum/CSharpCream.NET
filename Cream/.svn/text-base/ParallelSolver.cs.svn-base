@@ -1,0 +1,117 @@
+/*
+* @(#)ParallelSolver.cs
+*/
+using System;
+using  Cream;
+namespace  Cream
+{
+	
+	public class ParallelSolver:Solver, SolutionHandler
+	{
+		protected internal Solver[] solvers;
+		
+		public ParallelSolver(Solver[] solvers):this(solvers, null)
+		{
+		}
+		
+		public ParallelSolver(Solver[] solvers, String name):base(null, NONE, name)
+		{
+			this.solvers = solvers;
+			network = solvers[0].network;
+			option = solvers[0].option;
+		}
+		
+		public override void  setMonitor(Monitor monitor)
+		{
+			for (int i = 0; i < solvers.Length; i++)
+			{
+				solvers[i].setMonitor(monitor);
+			}
+		}
+		
+		public override void  stop()
+		{
+			lock (this)
+			{
+				for (int i = 0; i < solvers.Length; i++)
+				{
+					solvers[i].stop();
+				}
+				base.stop();
+			}
+		}
+		
+		public virtual void  solved(Solver solver, Solution solution)
+		{
+			lock (this)
+			{
+				if (Aborted || solution == null)
+				{
+					return ;
+				}
+				int oldBestValue = bestValue;
+				this.solution = solution;
+				success();
+				if (!(solver is LocalSearch))
+					return ;
+				if (network.Objective == null)
+					return ;
+				int value_ = solution.ObjectiveIntValue;
+				if (!isBetter(value_, oldBestValue))
+				{
+					double rate = 0.0;
+					if (solver is LocalSearch)
+					{
+						rate = ((LocalSearch) solver).ExchangeRate;
+					}
+					if (SupportClass.Random.NextDouble() < rate)
+					{
+						//System.out.println(header + "Get " + best);
+						((LocalSearch) solver).Candidate = bestSolution;
+					}
+				}
+			}
+		}
+		
+		private void  allStart()
+		{
+			for (int i = 0; i < solvers.Length; i++)
+			{
+				lock (solvers[i])
+				{
+					if (solvers[i] != null)
+					{
+						solvers[i].start(this, totalTimeout);
+					}
+				}
+			}
+		}
+		
+		private void  allJoin()
+		{
+			// Add synchronized statement
+			// Modified by Muneyuki Kawatani 05/12/09
+			lock (solvers)
+			{
+				for (int i = 0; i < solvers.Length; i++)
+				{
+					lock (solvers[i])
+					{
+						if (solvers[i] != null)
+						{
+							solvers[i].join();
+						}
+					}
+				}
+			}
+		}
+		
+		public override void  Run()
+		{
+			clearBest();
+			allStart();
+			allJoin();
+			fail();
+		}
+	}
+}

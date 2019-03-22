@@ -1,0 +1,182 @@
+using System;
+
+namespace  Cream
+{
+	
+	public class IntComparison:Constraint
+	{
+		public const int LE = 0;
+		public const int LT = 1;
+		public const int GE = 2;
+		public const int GT = 3;
+		private int comparison;
+		private Variable[] v;
+
+        public IntComparison(Network net, int comp, Variable v0, Variable v1)
+            : this(net, comp, new Variable[] { v0, v1 })
+        {
+        }
+
+        public IntComparison(Network net, int comp, Variable v0, Variable v1, ConstraintTypes cType)
+            : this(net, comp, new Variable[] { v0, v1 }, cType)
+        {
+        }
+
+        public IntComparison(Network net, int comp, Variable v0, Variable v1, ConstraintTypes cType, int weight)
+            : this(net, comp, new Variable[] { v0, v1 }, cType, weight)
+        {
+        }
+
+        public IntComparison(Network net, int comp, Variable v0, int x1)
+            : this(net, comp, v0, new IntVariable(net, x1))
+        {
+        }
+
+        public IntComparison(Network net, int comp, Variable v0, int x1, ConstraintTypes cType)
+            : this(net, comp, v0, new IntVariable(net, x1), cType)
+        {
+        }
+
+        public IntComparison(Network net, int comp, Variable v0, int x1, ConstraintTypes cType, int weight)
+            : this(net, comp, v0, new IntVariable(net, x1), cType, weight)
+        {
+        }
+
+        public IntComparison(Network net, int comp, int x0, Variable v1)
+            : this(net, comp, new IntVariable(net, x0), v1)
+        {
+        }
+
+        public IntComparison(Network net, int comp, int x0, Variable v1, ConstraintTypes cType)
+            : this(net, comp, new IntVariable(net, x0), v1, cType)
+        {
+        }
+
+        public IntComparison(Network net, int comp, int x0, Variable v1, ConstraintTypes cType, int weight)
+            : this(net, comp, new IntVariable(net, x0), v1, cType, weight)
+        {
+        }
+
+        private IntComparison(Network net, int comp, Variable[] v)
+            : this(net, comp, v, ConstraintTypes.Hard)
+        {
+        }
+
+        private IntComparison(Network net, int comp, Variable[] v, ConstraintTypes cType)
+            : this(net, comp, v, cType, 0)
+        {
+        }
+
+        private IntComparison(Network net, int comp, Variable[] v, ConstraintTypes cType, int weight)
+            : base(net, cType, weight)
+        {
+            comparison = comp;
+            this.v = v;
+        }
+
+        public Variable[] Vars
+        {
+            get
+            {
+                return v;
+            }
+        }
+        
+        protected internal override Constraint copy(Network net)
+		{
+			return new IntComparison(net, comparison, Constraint.copy(this.v, net));
+		}
+		
+		protected internal override bool isModified()
+		{
+			return isModified(v);
+		}
+		
+        private static bool satisfyLE(Variable v0, Variable v1, Trail trail)
+		{
+			IntDomain d0 = (IntDomain) v0.Domain;
+			IntDomain d1 = (IntDomain) v1.Domain;
+			d0 = d0.capInterval(IntDomain.MIN_VALUE, d1.max());
+			if (d0.Empty)
+				return false;
+            if (trail != null)
+            {
+                v0.updateDomain(d0, trail);
+            }
+            d1 = d1.capInterval(d0.min(), IntDomain.MAX_VALUE);
+			if (d1.Empty)
+				return false;
+            if (trail != null)
+            {
+                v1.updateDomain(d1, trail);
+            }
+            return true;
+		}
+		
+		private static bool satisfyLT(Variable v0, Variable v1, Trail trail)
+		{
+			IntDomain d0 = (IntDomain) v0.Domain;
+			IntDomain d1 = (IntDomain) v1.Domain;
+			d0 = d0.capInterval(IntDomain.MIN_VALUE, d1.max() - 1);
+			if (d0.Empty)
+				return false;
+            if (trail != null)
+            {
+                v0.updateDomain(d0, trail);
+            }
+		    d1 = d1.capInterval(d0.min() + 1, IntDomain.MAX_VALUE);
+			if (d1.Empty)
+				return false;
+            if (trail != null)
+            {
+                v1.updateDomain(d1, trail);
+            }
+		    return true;
+		}
+
+        protected internal override bool isSatisfied()
+        {
+            return satisfy(null);
+        }
+		protected internal override bool satisfy(Trail trail)
+		{
+			switch (comparison)
+			{
+				
+				case LE: 
+					return satisfyLE(v[0], v[1], trail);
+				
+				case LT: 
+					return satisfyLT(v[0], v[1], trail);
+				
+				case GE: 
+					return satisfyLE(v[1], v[0], trail);
+				
+				case GT: 
+					return satisfyLT(v[1], v[0], trail);
+				}
+			return false;
+		}
+		
+		public override String ToString()
+		{
+			String c = "";
+			switch (comparison)
+			{
+				
+				case LE: 
+					c = "LE"; break;
+				
+				case LT: 
+					c = "LT"; break;
+				
+				case GE: 
+					c = "GE"; break;
+				
+				case GT: 
+					c = "GT"; break;
+				}
+			return "IntComparison(" + c + "," + Constraint.toString(v) + ")";
+		}
+	}
+}

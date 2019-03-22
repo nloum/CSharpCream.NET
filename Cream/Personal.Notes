@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Notes xmlns="clr-namespace:StickyNotes.Model;assembly=StickyNotes">
+  <Note Content="dfgdgdfgdfdfgdgfcvbdcb" Date="2009-08-03T11:49:56.271966-06:00" Project="d915fb60-2389-4de1-bfa3-6d2ba30ace0a" RelativePath="DefaultSolver.cs">
+    <Note.TextRegion>
+      <TextRegion StartLine="33" EndLine="33" StartColumn="0" EndColumn="59" />
+    </Note.TextRegion>
+  </Note>
+</Notes>

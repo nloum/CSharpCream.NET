@@ -1,0 +1,388 @@
+/*
+* @(#)IntVariable.cs
+*/
+using System;
+using  Cream;
+
+namespace  Cream
+{
+	
+	/// <summary> Integer variables.</summary>
+	/// <seealso cref="IntDomain">
+	/// </seealso>
+	/// <since> 1.0
+	/// </since>
+	/// <version>  1.0, 01/12/08
+	/// </version>
+    /// <author>  Based on Java Solver by : Naoyuki Tamura (tamura@kobe-u.ac.jp) 
+    ///           C#: Ali Hmer (Hmer200a@uregina.ca)
+	/// </author>
+	public class IntVariable:Variable
+	{
+		
+		/// <summary> Constructs an integer variable of the network
+		/// with an initial integer domain <tt>d</tt>
+		/// and a default name.
+		/// This constructor is equivalent to <tt>IntVariable(network, d, null)</tt>.
+		/// </summary>
+		/// <param name="net">the network
+		/// </param>
+		/// <param name="d">the initial integer domain
+		/// </param>
+		public IntVariable(Network net, IntDomain d):this(net, d, null)
+		{
+		}
+		
+		/// <summary> Constructs an integer variable of the network
+		/// with an initial integer domain <tt>d</tt>
+		/// and a name specified by the parameter <tt>name</tt>.
+		/// When the parameter <tt>name</tt> is <tt>null</tt>,
+		/// default names (<tt>v1</tt>, <tt>v2</tt>, and so on) are used.
+		/// </summary>
+		/// <param name="net">the network
+		/// </param>
+		/// <param name="d">the initial integer domain
+		/// </param>
+		/// <param name="name">the name of the variable, or <tt>null</tt> for a default name
+		/// </param>
+		public IntVariable(Network net, IntDomain d, String name):base(net, d, name)
+		{
+            this.IsValueType = false;
+        }
+
+        public IntVariable(Network net, String name):this(net, IntDomain.FULL, name)
+        {
+        }
+
+		public IntVariable(Network net):this(net, IntDomain.FULL)
+		{
+		}
+		
+		public IntVariable(Network net, int value_):this(net, new IntDomain(value_))
+		{
+		    this.IsValueType = true;
+		}
+		
+		public IntVariable(Network net, int value_, String name):this(net, new IntDomain(value_), name)
+		{
+            this.IsValueType = true;
+        }
+		
+		public IntVariable(Network net, int lo, int hi):this(net, new IntDomain(lo, hi))
+		{
+		}
+		
+		public IntVariable(Network net, int lo, int hi, String name):this(net, new IntDomain(lo, hi), name)
+		{
+		}
+		
+		public virtual IntVariable add(IntVariable v)
+		{
+			Network net = Network;
+			IntVariable x = new IntVariable(net);
+			// x = this + v
+			new IntArith(net, IntArith.ADD, x, this, v);
+			return x;
+		}
+		
+		public virtual IntVariable add(int value_)
+		{
+			Network net = Network;
+			IntVariable x = new IntVariable(net);
+			// x = this + value
+			new IntArith(net, IntArith.ADD, x, this, new IntVariable(net, value_));
+			return x;
+		}
+		
+		public virtual IntVariable subtract(IntVariable v)
+		{
+			Network net = Network;
+			IntVariable x = new IntVariable(net);
+			// x = this - v
+			new IntArith(net, IntArith.SUBTRACT, x, this, v);
+			return x;
+		}
+		
+		public virtual IntVariable subtract(int value_)
+		{
+			Network net = Network;
+			IntVariable x = new IntVariable(net);
+			// x = this - value
+			new IntArith(net, IntArith.SUBTRACT, x, this, new IntVariable(net, value_));
+			return x;
+		}
+		
+		public virtual IntVariable multiply(IntVariable v)
+		{
+			Network net = Network;
+			IntVariable x = new IntVariable(net);
+			// x = this * v
+			new IntArith(net, IntArith.MULTIPLY, x, this, v);
+			return x;
+		}
+		
+		public virtual IntVariable multiply(int value_)
+		{
+			Network net = Network;
+			IntVariable x = new IntVariable(net);
+			// x = this * value
+			new IntArith(net, IntArith.MULTIPLY, x, this, new IntVariable(net, value_));
+			return x;
+		}
+		
+		public virtual IntVariable max(IntVariable v)
+		{
+			Network net = Network;
+			IntVariable x = new IntVariable(net);
+			// x = max(this, v)
+			new IntArith(net, IntArith.MAX, x, this, v);
+			return x;
+		}
+		
+		public virtual IntVariable max(int value_)
+		{
+			Network net = Network;
+			IntVariable x = new IntVariable(net);
+			// x = max(this, value)
+			new IntArith(net, IntArith.MAX, x, this, new IntVariable(net, value_));
+			return x;
+		}
+		
+		public virtual IntVariable min(IntVariable v)
+		{
+			Network net = Network;
+			IntVariable x = new IntVariable(net);
+			// x = min(this, v)
+			new IntArith(net, IntArith.MIN, x, this, v);
+			return x;
+		}
+		
+		public virtual IntVariable min(int value_)
+		{
+			Network net = Network;
+			IntVariable x = new IntVariable(net);
+			// x = min(this, value)
+			new IntArith(net, IntArith.MIN, x, this, new IntVariable(net, value_));
+			return x;
+		}
+		
+		public virtual IntVariable negate()
+		{
+			Network net = Network;
+			IntVariable x = new IntVariable(net);
+			// x = - this
+			new IntFunc(net, IntFunc.NEGATE, x, this);
+			return x;
+		}
+		
+		public virtual IntVariable abs()
+		{
+			Network net = Network;
+			IntVariable x = new IntVariable(net);
+			// x = abs(this)
+			new IntFunc(net, IntFunc.ABS, x, this);
+			return x;
+		}
+		
+		public virtual IntVariable sign()
+		{
+			Network net = Network;
+			IntVariable x = new IntVariable(net);
+			// x = sign(this)
+			new IntFunc(net, IntFunc.SIGN, x, this);
+			return x;
+		}
+
+        public void equals(IntVariable v)
+        {
+            this.equals(v, ConstraintTypes.Hard);
+        }
+
+        public void equals(IntVariable v, ConstraintTypes cType)
+        {
+            this.equals(v, cType, 0);
+        }
+
+        public void equals(IntVariable v, ConstraintTypes cType, int weight)
+        {
+            Network net = Network;
+            new Equals(net, this, v, cType, weight);
+        }
+
+        public virtual void equals(int value_)
+        {
+            this.equals(value_, ConstraintTypes.Hard);
+        }
+
+        public virtual void equals(int value_, ConstraintTypes cType)
+        {
+            this.equals(value_, cType, 0);
+        }
+
+        public virtual void equals(int value_, ConstraintTypes cType, int weight)
+        {
+            Network net = Network;
+            new Equals(net, this, new IntVariable(net, value_), cType, weight);
+        }
+
+        public virtual void notEquals(IntVariable v)
+        {
+            this.notEquals(v, ConstraintTypes.Hard);
+        }
+
+        public virtual void notEquals(IntVariable v, ConstraintTypes cType)
+        {
+            this.notEquals(v, cType, 0);
+        }
+
+        public virtual void notEquals(IntVariable v, ConstraintTypes cType, int weight)
+        {
+            Network net = Network;
+            new NotEquals(net, this, v, cType, weight);
+        }
+
+        public virtual void notEquals(int value_)
+        {
+            this.notEquals(value_, ConstraintTypes.Hard);
+       }
+
+        public virtual void notEquals(int value_, ConstraintTypes cType)
+        {
+            this.notEquals(value_, cType, 0);
+        }
+
+        public virtual void notEquals(int value_, ConstraintTypes cType, int weight)
+        {
+            Network net = Network;
+            new NotEquals(net, this, new IntVariable(net, value_), cType, weight);
+        }
+
+        public virtual void le(IntVariable v)
+        {
+            this.le(v, ConstraintTypes.Hard);
+        }
+
+        public virtual void le(IntVariable v, ConstraintTypes cType)
+        {
+            this.le(v, cType, 0);
+        }
+
+        public virtual void le(IntVariable v, ConstraintTypes cType, int weight)
+        {
+            Network net = Network;
+            new IntComparison(net, IntComparison.LE, this, v, cType, weight);
+        }
+
+        public virtual void le(int value_)
+        {
+            this.le(value_, ConstraintTypes.Hard);
+        }
+
+        public virtual void le(int value_, ConstraintTypes cType)
+        {
+            this.le(value_, cType, 0);
+        }
+
+        public virtual void le(int value_, ConstraintTypes cType, int weight)
+        {
+            Network net = Network;
+            new IntComparison(net, IntComparison.LE, this, new IntVariable(net, value_), cType, weight);
+        }
+
+        public virtual void lt(IntVariable v)
+        {
+            this.lt(v, ConstraintTypes.Hard);
+        }
+
+        public virtual void lt(IntVariable v, ConstraintTypes cType)
+        {
+            this.lt(v, cType, 0);
+        }
+
+        public virtual void lt(IntVariable v, ConstraintTypes cType, int weight)
+        {
+            Network net = Network;
+            new IntComparison(net, IntComparison.LT, this, v, cType, weight);
+        }
+
+        public virtual void lt(int value_)
+        {
+            this.lt(value_, ConstraintTypes.Hard);
+        }
+
+        public virtual void lt(int value_, ConstraintTypes cType)
+        {
+            this.lt(value_, cType, 0);
+        }
+
+        public virtual void lt(int value_, ConstraintTypes cType, int weight)
+        {
+            Network net = Network;
+            new IntComparison(net, IntComparison.LT, this, new IntVariable(net, value_), cType, weight);
+        }
+
+        public virtual void ge(IntVariable v)
+        {
+            this.ge(v, ConstraintTypes.Hard);
+        }
+
+        public virtual void ge(IntVariable v, ConstraintTypes cType)
+        {
+            this.ge(v, cType, 0);
+        }
+
+        public virtual void ge(IntVariable v, ConstraintTypes cType, int weight)
+        {
+            Network net = Network;
+            new IntComparison(net, IntComparison.GE, this, v, cType, weight);
+        }
+
+        public virtual void ge(int value_)
+        {
+            this.ge(value_, ConstraintTypes.Hard);
+        }
+
+        public virtual void ge(int value_, ConstraintTypes cType)
+        {
+            this.ge(value_, cType, 0);
+        }
+
+        public virtual void ge(int value_, ConstraintTypes cType, int weight)
+        {
+            Network net = Network;
+            new IntComparison(net, IntComparison.GE, this, new IntVariable(net, value_), cType, weight);
+        }
+
+        public virtual void gt(IntVariable v)
+        {
+            this.gt(v, ConstraintTypes.Hard);
+        }
+
+        public virtual void gt(IntVariable v, ConstraintTypes cType)
+        {
+            this.gt(v, cType, 0);
+        }
+
+        public virtual void gt(IntVariable v, ConstraintTypes cType, int weight)
+        {
+            Network net = Network;
+            new IntComparison(net, IntComparison.GT, this, v, cType, weight);
+        }
+
+        public virtual void gt(int value_)
+        {
+            this.gt(value_, ConstraintTypes.Hard);
+        }
+
+        public virtual void gt(int value_, ConstraintTypes cType)
+        {
+            this.gt(value_, cType, 0);
+        }
+
+        public virtual void gt(int value_, ConstraintTypes cType, int weight)
+        {
+            Network net = Network;
+            new IntComparison(net, IntComparison.GT, this, new IntVariable(net, value_), cType, weight);
+        }
+    }
+}

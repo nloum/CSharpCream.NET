@@ -1,0 +1,772 @@
+/*
+* @(#)Solver.cs
+*/
+using System;
+using  Cream;
+namespace  Cream
+{
+	
+	/// <summary> An abstract class for constraint solvers.
+	/// A solver is constructed with a {@linkplain Network constraint network}
+	/// which is used by the solver to find solutions.
+	/// Please note that any network can not be simultaneously shared by two different solvers.
+	/// <p>
+	/// Solvers can be used in three typical ways.
+	/// <ul>
+	/// <li> As a subroutine: {@link #findFirst()}, {@link #findBest()}, etc.
+	/// <pre>
+	/// Solution solution = solver.findFirst();
+	/// </pre>
+	/// <li> As a handler caller: {@link #findAll(SolutionHandler handler)}, etc.
+	/// <pre>
+	/// solver.findAll(new SolutionHandler() {
+	/// public synchronized void solved(Solver solver, Solution solution) {
+	/// .....
+	/// }
+	/// });
+	/// </pre>
+	/// <li> As a coroutine: {@link #start()}, {@link #waitNext()}, {@link #resume()}, {@link #stop()}, etc.
+	/// <pre>
+	/// for (solver.start(); solver.waitNext(); solver.resume()) {
+	/// Solution solution = solver.getSolution();
+	/// .....
+	/// }
+	/// solver.stop();
+	/// </pre>
+	/// </ul>
+	/// </summary>
+	/// <seealso cref="Network">
+	/// </seealso>
+	/// <seealso cref="Solution">
+	/// </seealso>
+	/// <seealso cref="SolutionHandler">
+	/// </seealso>
+	/// <since> 1.0
+	/// </since>
+	/// <version>  1.0, 01/12/08
+	/// </version>
+    /// <author>  Based on Java Solver by : Naoyuki Tamura (tamura@kobe-u.ac.jp) 
+    ///           C#: Ali Hmer (Hmer200a@uregina.ca)
+	/// </author>
+	public abstract class Solver : IThreadRunnable
+	{
+		/// <summary> Returns the ID number of this solver.</summary>
+		/// <returns> the ID number of this solver
+		/// </returns>
+		virtual public int ID
+		{
+			get
+			{
+				return id;
+			}
+			
+		}
+		/// <summary> Returns the last solution this solver is found.</summary>
+		/// <returns> the last solution, or <tt>null</tt> if no solutions have been found
+		/// </returns>
+		virtual public Solution Solution
+		{
+			get
+			{
+				return solution;
+			}
+			
+		}
+		/// <summary> Returns the best solution this solver has been found.</summary>
+		/// <returns> the best solution, or <tt>null</tt> if no solutions have been found
+		/// </returns>
+		virtual public Solution BestSolution
+		{
+			get
+			{
+				return bestSolution;
+			}
+			
+		}
+		/// <summary> Returns the best objective value this solver has been found.
+		/// When no solutions have been found, this method returns
+		/// <tt>IntDomain.MAX_VALUE</tt> if the search strategy is MINIMIZE,
+		/// or <tt>IntDomain.MIN_VALUE</tt> if the search strategy is MAXIMIZE.
+		/// </summary>
+		/// <returns> the best objective value
+		/// </returns>
+		virtual public int BestValue
+		{
+			get
+			{
+				return bestValue;
+			}
+			
+		}
+		virtual protected internal bool Aborted
+		{
+			get
+			{
+				return abort;
+			}
+			
+		}
+
+        /**
+	 * Returns the number of solutions. 
+	 * @return the number of solutions
+	 */
+        public long getCount()
+        {
+            return count;
+        }
+
+        /**
+         * Returns the elapsed time in milli seconds.
+         * @return the elapsed time
+         */
+        public long getElapsedTime()
+        {
+            long time = (DateTime.Now.Ticks - 621355968000000000) / 10000;
+            return time - startTime;
+        }
+		/// <summary> A constant value for the default option</summary>
+		public const int DEFAULT = - 1;
+		
+		/// <summary> A constant value for no options</summary>
+		public const int NONE = 0;
+		
+		/// <summary> An option value specifying to minimize the objective variable</summary>
+		public const int MINIMIZE = 1 << 0;
+		
+		/// <summary> An option value specifying to maximize the objective variable</summary>
+		public const int MAXIMIZE = 1 << 1;
+		
+		/// <summary> An option value specifying to return only better solutions</summary>
+		public const int BETTER = 1 << 2;
+		
+		private static int idCounter;
+		private int id;
+        protected long count;
+		protected internal Network network;
+		protected internal int option;
+		protected internal String name;
+		protected internal bool debug;
+		
+		protected internal Solution solution;
+		protected internal Solution bestSolution;
+		protected internal int bestValue;
+		
+		private SupportClass.ThreadClass thread;
+		private bool abort;
+		private bool running;
+		private bool ready;
+		
+		protected internal long totalTimeout;
+		protected internal long startTime;
+		
+		private Monitor monitor;
+		
+		/// <summary> Constructs a solver for the given network
+		/// (for invocation by subclass constructors).
+		/// This constructor is equivalent to <tt>Solver(network, DEFAULT, null)</tt>.
+		/// </summary>
+		/// <param name="network">the constraint network
+		/// </param>
+		protected Solver(Network network):this(network, DEFAULT, null)
+		{
+		}
+		
+		/// <summary> Constructs a solver for the given network and option
+		/// (for invocation by subclass constructors).
+		/// This constructor is equivalent to <tt>Solver(network, option, null)</tt>.
+		/// </summary>
+		/// <param name="network">the constraint network
+		/// </param>
+		/// <param name="option">the option for search strategy
+		/// </param>
+		protected Solver(Network network, int option):this(network, option, null)
+		{
+		}
+		
+		/// <summary> Constructs a solver for the given network and name
+		/// (for invocation by subclass constructors).
+		/// This constructor is equivalent to <tt>Solver(network, DEFAULT, name)</tt>.
+		/// </summary>
+		/// <param name="network">the constraint network
+		/// </param>
+		/// <param name="name">the name of the solver
+		/// </param>
+		protected Solver(Network network, String name):this(network, DEFAULT, name)
+		{
+		}
+		
+		/// <summary> Constructs a solver for the given network, option, and name
+		/// (for invocation by subclass constructors).
+		/// When <tt>option</tt> is <tt>DEFAULT</tt>,
+		/// <tt>NONE</tt> is used if the network has no objective variable,
+		/// or else <tt>MINIMIZE</tt> is used.
+		/// Solvers and subclasses have their ID number starting from 0.
+		/// </summary>
+		/// <param name="network">the constraint network
+		/// </param>
+		/// <param name="option">the option for search strategy, or DEFAULT for default search strategy
+		/// </param>
+		/// <param name="name">the name of the solver, or <tt>null</tt> for a default name
+		/// </param>
+		protected Solver(Network network, int option, String name)
+		{
+			this.network = network;
+			if (option == DEFAULT)
+			{
+				if (network.Objective == null)
+					option = NONE;
+				else
+					option = MINIMIZE;
+			}
+			this.option = option;
+			id = idCounter++;
+			if (name == null)
+			{
+				this.name = GetType().FullName + id;
+			}
+			else
+			{
+				this.name = name;
+			}
+			clearBest();
+		}
+		
+		/// <summary> Sets the monitor.</summary>
+		/// <param name="_monitor">monitor
+		/// </param>
+		public virtual void  setMonitor(Monitor _monitor)
+		{
+			monitor = _monitor;
+			_monitor.add(this);
+		}
+		
+		/// <summary> Gets the monitor.</summary>
+		public virtual Monitor getMonitor()
+		{
+			return monitor;
+		}
+		
+		/// <summary> Resets the ID counter to be 0.</summary>
+		public static void  resetIDCounter()
+		{
+			idCounter = 0;
+		}
+		
+		/// <summary> Clears the best solution this solver has been found.</summary>
+		public void  clearBest()
+		{
+			bestSolution = null;
+			if (isOption(MINIMIZE))
+			{
+				bestValue = IntDomain.MAX_VALUE;
+			}
+			else
+			{
+				bestValue = IntDomain.MIN_VALUE;
+			}
+		}
+		
+		/// <summary> Returns the option value.</summary>
+		/// <returns> the option value
+		/// </returns>
+		public virtual int getOption()
+		{
+			return option;
+		}
+		
+		protected internal virtual bool isOption(int opt)
+		{
+			return (option & opt) != 0;
+		}
+		
+		protected internal virtual bool isBetter(int value1, int value2)
+		{
+			return isOption(MINIMIZE)?value1 < value2:value1 > value2;
+		}
+		
+		protected internal virtual bool updateBest()
+		{
+			if (solution == null)
+				return false;
+			if (network.Objective == null)
+			{
+				bestSolution = solution;
+				return true;
+			}
+			int value_ = solution.ObjectiveIntValue;
+			if (isBetter(value_, bestValue))
+			{
+				bestSolution = solution;
+				bestValue = value_;
+				return true;
+			}
+			return false;
+		}
+		
+		/// <summary> Starts the solver in a new thread, and immediately returns to the caller.
+		/// The {@link #waitNext()} and {@link #waitNext(long timeout)} methods can be used
+		/// to wait the next solution.
+		/// When a solution is found, the solver suspends the execution until
+		/// the {@link #resume()} method is called.
+		/// You can stop the solver anytime by calling the {@link #stop()} method.
+		/// </summary>
+		public virtual void  start()
+		{
+			lock (this)
+			{
+				start(0);
+			}
+		}
+		
+		/// <summary> Starts the solver in a new thread with the timeout, and immediately returns to the caller.
+		/// When the <tt>timeout</tt> milliseconds have been elapsed
+		/// since the start of the solver, it stops the execution.
+		/// The {@link #waitNext()} and {@link #waitNext(long timeout)} methods can be used
+		/// to wait the next solution, or to detect the timeout.
+		/// When a solution is found, the solver suspends the execution until
+		/// the {@link #resume()} method is called.
+		/// You can stop the solver anytime by calling the {@link #stop()} method.
+		/// </summary>
+		/// <param name="timeout">timeout in milliseconds (non-positive value means no timeout)
+		/// </param>
+		public virtual void  start(long timeout)
+		{
+			lock (this)
+			{
+				// For bug fix. (ParallelSolver would not stop)
+				// Modified by Muneyuki Kawatani 05/12/09
+				thread = null;
+				if (debug)
+				{
+					Console.Out.WriteLine(name + " start");
+				}
+				startTime = (DateTime.Now.Ticks - 621355968000000000) / 10000;
+				totalTimeout = timeout;
+				abort = false;
+				running = true;
+				ready = false;
+				solution = null;
+				thread = new SupportClass.ThreadClass(new System.Threading.ThreadStart(Run));
+				thread.Start();
+				System.Threading.Monitor.PulseAll(this);
+			}
+		}
+		
+		private class HandlerInvoker : IThreadRunnable
+		{
+			private void  InitBlock(Solver _enclosingInstance)
+			{
+				enclosingInstance = _enclosingInstance;
+			}
+			private Solver enclosingInstance;
+			public Solver Enclosing_Instance
+			{
+				get
+				{
+					return enclosingInstance;
+				}
+				
+			}
+			private SolutionHandler handler;
+			private long timeout;
+			
+			public HandlerInvoker(Solver enclosingInstance, SolutionHandler handler, long timeout)
+			{
+				InitBlock(enclosingInstance);
+				this.handler = handler;
+				this.timeout = timeout;
+			}
+			
+			public virtual void  Run()
+			{
+				Enclosing_Instance.clearBest();
+				for (Enclosing_Instance.start(timeout); Enclosing_Instance.waitNext(); Enclosing_Instance.resume())
+				{
+					if (Enclosing_Instance.Aborted)
+						break;
+					handler.solved(Enclosing_Instance, Enclosing_Instance.solution);
+				}
+				// solution = null;
+				handler.solved(Enclosing_Instance, null);
+				Enclosing_Instance.stop();
+			}
+		}
+		
+		/// <summary> Starts the solver in a new thread, and immediately returns to the caller.
+		/// The handler is called for each solution and at the end of the solver execution.
+		/// You can stop the solver anytime by calling the {@link #stop()} method.
+		/// </summary>
+		/// <param name="handler">solution handler
+		/// </param>
+		public virtual void  start(SolutionHandler handler)
+		{
+			lock (this)
+			{
+				start(handler, 0);
+			}
+		}
+		
+		/// <summary> Starts the solver in a new thread with the timeout, and immediately returns to the caller.
+		/// When the <tt>timeout</tt> milliseconds have been elapsed
+		/// since the start of the solver, it stops the execution.
+		/// The handler is called for each solution and at the end of the solver execution.
+		/// You can stop the solver anytime by calling the {@link #stop()} method.
+		/// </summary>
+		/// <param name="handler">solution handler
+		/// </param>
+		/// <param name="timeout">timeout in milliseconds (non-positive value means no timeout)
+		/// </param>
+		public virtual void  start(SolutionHandler handler, long timeout)
+		{
+			lock (this)
+			{
+				(new SupportClass.ThreadClass(new System.Threading.ThreadStart(new HandlerInvoker(this, handler, timeout).Run))).Start();
+			}
+		}
+		
+		/// <summary> Waits for the next solution, or the end of the solver execution.
+		/// It returns  <tt>true</tt> if the next solution is available, <tt>false</tt> if the solver ends the execution.
+		/// </summary>
+		/// <returns> <tt>true</tt> if the next solution is available
+		/// </returns>
+		public virtual bool waitNext()
+		{
+			lock (this)
+			{
+				return waitNext(0);
+			}
+		}
+		
+		/// <summary> Waits for the next solution, or the end of the solver execution with the timeout.
+		/// It returns  <tt>true</tt> if the next solution is available within the timeout milliseconds,
+		/// <tt>false</tt> if the solver ends the execution or the <tt>timeout</tt> milliseconds have been elapsed
+		/// since the start of this method.
+		/// </summary>
+		/// <param name="timeout">timeout in milliseconds (non-positive value means no timeout)
+		/// </param>
+		/// <returns> <tt>true</tt> if the next solution is available
+		/// </returns>
+		public virtual bool waitNext(long timeout)
+		{
+			lock (this)
+			{
+				if (debug)
+				{
+					Console.Out.WriteLine(name + " waitNext");
+				}
+				long deadline = Int64.MaxValue;
+				if (timeout > 0)
+				{
+					deadline = (DateTime.Now.Ticks - 621355968000000000) / 10000 + timeout;
+				}
+				if (totalTimeout > 0)
+				{
+					deadline = Math.Min(deadline, startTime + totalTimeout);
+				}
+				while (running && !ready)
+				{
+					if (deadline == Int64.MaxValue)
+					{
+						try
+						{
+							System.Threading.Monitor.Wait(this);
+						}
+						catch (System.Threading.ThreadInterruptedException)
+						{
+						}
+					}
+					else
+					{
+						long t = deadline - (DateTime.Now.Ticks - 621355968000000000) / 10000;
+						if (t <= 0)
+							break;
+						try
+						{
+							System.Threading.Monitor.Wait(this, TimeSpan.FromMilliseconds(Math.Max(10, t)));
+						}
+						catch (System.Threading.ThreadInterruptedException)
+						{
+						}
+					}
+				}
+				if (!running)
+				{
+					// Failure
+					return false;
+				}
+			    if (!ready)
+			    {
+			        // Timeout
+			        return false;
+			    }
+			    return true;
+			}
+		}
+		
+		/// <summary> Resumes the execution of the solver.</summary>
+		public virtual void  resume()
+		{
+			lock (this)
+			{
+				if (debug)
+				{
+					Console.Out.WriteLine(name + " resume");
+				}
+				ready = false;
+				System.Threading.Monitor.PulseAll(this);
+			}
+		}
+		
+		/// <summary> Waits until the solver ends the execution.</summary>
+		public virtual void  join()
+		{
+			lock (this)
+			{
+				if (debug)
+				{
+					Console.Out.WriteLine(name + " join");
+				}
+				while (thread == null)
+				{
+					try
+					{
+						System.Threading.Monitor.Wait(this);
+					}
+					catch (System.Threading.ThreadInterruptedException)
+					{
+					}
+				}
+				while (running)
+				{
+					try
+					{
+						System.Threading.Monitor.Wait(this);
+					}
+					catch (System.Threading.ThreadInterruptedException)
+					{
+					}
+				}
+				thread = null;
+			}
+		}
+		
+		/// <summary> Stops the execution of the solver.</summary>
+		public virtual void  stop()
+		{
+			lock (this)
+			{
+				if (debug)
+				{
+					Console.Out.WriteLine(name + " stop");
+				}
+				abort = true;
+				while (running)
+				{
+					System.Threading.Monitor.PulseAll(this);
+					try
+					{
+						System.Threading.Monitor.Wait(this);
+					}
+					catch (System.Threading.ThreadInterruptedException)
+					{
+					}
+				}
+				// For bug fix. (ParallelSolver would not stop)
+				// Modified by Muneyuki Kawatani 05/12/09
+				// thread = null;
+			}
+		}
+		
+		protected internal virtual void  success()
+		{
+			lock (this)
+			{
+				if (debug)
+				{
+					Console.Out.WriteLine(name + " success");
+				}
+				if (abort)
+					return ;
+                count++;
+		        System.Threading.Thread.Sleep(0);
+				bool better = updateBest();
+				if (isOption(BETTER))
+				{
+					if (monitor != null)
+					{
+						//monitor.addData(this, bestValue);
+						int value_ = solution.ObjectiveIntValue;
+						monitor.addData(this, value_);
+					}
+					if (!better)
+						return ;
+				}
+				else
+				{
+					if (monitor != null)
+					{
+						int value_ = solution.ObjectiveIntValue;
+						monitor.addData(this, value_);
+					}
+				}
+				ready = true;
+				System.Threading.Monitor.PulseAll(this);
+				while (!abort && ready)
+				{
+					try
+					{
+						System.Threading.Monitor.Wait(this);
+					}
+					catch (System.Threading.ThreadInterruptedException)
+					{
+					}
+				}
+			}
+		}
+		
+		protected internal virtual void  fail()
+		{
+			lock (this)
+			{
+				if (debug)
+				{
+					Console.Out.WriteLine(name + " fail");
+				}
+				solution = null;
+				running = false;
+				System.Threading.Monitor.PulseAll(this);
+			}
+		}
+		
+		/// <summary> The body of the solver.
+		/// This method is called from {@link Solver#start} methods.
+		/// </summary>
+		public abstract void  Run();
+		
+		/// <summary> Finds the first solution.
+		/// This method is equivalent to {@link #findFirst(long) findFirst(0)}.
+		/// </summary>
+		/// <returns> the first solution, or <tt>null</tt> if no solutions found
+		/// </returns>
+		public virtual Solution findFirst()
+		{
+			lock (this)
+			{
+				return findFirst(0);
+			}
+		}
+		
+		/// <summary> Finds the first solution with the timeout.
+		/// This method is implemented as follows:
+		/// <pre>
+		/// clearBest();
+		/// start(timeout);
+		/// waitNext();
+		/// stop();
+		/// return getBestSolution();
+		/// </pre>
+		/// </summary>
+		/// <param name="timeout">timeout in milliseconds (non-positive value means no timeout)
+		/// </param>
+		/// <returns> the first solution, or <tt>null</tt> if no solutions found
+		/// </returns>
+		public virtual Solution findFirst(long timeout)
+		{
+			lock (this)
+			{
+				clearBest();
+				start(timeout);
+				waitNext();
+				stop();
+				return BestSolution;
+			}
+		}
+		
+		/// <summary> Finds the best solution.
+		/// This method is equivalent to {@link #findBest(long) findBest(0)}.
+		/// </summary>
+		/// <returns> the best solution, or <tt>null</tt> if no solutions found
+		/// </returns>
+		public virtual Solution findBest()
+		{
+			lock (this)
+			{
+				return findBest(0);
+			}
+		}
+		
+		/// <summary> Finds the best solution with the timeout.
+		/// This method is implemented as follows:
+		/// <pre>
+		/// clearBest();
+		/// for (start(timeout); waitNext(); resume()) {
+		/// ;
+		/// }
+		/// stop();
+		/// return getBestSolution();
+		/// </pre>
+		/// </summary>
+		/// <param name="timeout">timeout in milliseconds (non-positive value means no timeout)
+		/// </param>
+		/// <returns> the best solution, or <tt>null</tt> if no solutions found
+		/// </returns>
+		public virtual Solution findBest(long timeout)
+		{
+			lock (this)
+			{
+				clearBest();
+				for (start(timeout); waitNext(); resume())
+				{
+				}
+				stop();
+				return BestSolution;
+			}
+		}
+		
+		/// <summary> Invokes the handler for each solution.
+		/// This method is equivalent to {@link #findAll(SolutionHandler, long) findFirst(handler, 0)}.
+		/// </summary>
+		/// <param name="handler">solution handler
+		/// </param>
+		public virtual void  findAll(SolutionHandler handler)
+		{
+			lock (this)
+			{
+				findAll(handler, 0);
+			}
+		}
+		
+		/// <summary> Invokes the handler for each solution with the timeout.
+		/// This method is implemented as follows:
+		/// <pre>
+		/// clearBest();
+		/// start(handler, timeout);
+		/// join();
+		/// </pre>
+		/// </summary>
+		/// <param name="handler">solution handler
+		/// </param>
+		/// <param name="timeout">timeout in milliseconds (non-positive value means no timeout)
+		/// </param>
+		public virtual void  findAll(SolutionHandler handler, long timeout)
+		{
+			lock (this)
+			{
+				clearBest();
+				start(handler, timeout);
+				join();
+			}
+		}
+		
+		/// <summary> Returns the name of this solver.</summary>
+		/// <returns> the name of this solver
+		/// </returns>
+		public override String ToString()
+		{
+			return name;
+		}
+
+	    
+	}
+}

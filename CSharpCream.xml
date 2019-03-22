@@ -1,0 +1,672 @@
+﻿<ConversionLog>
+    <Settings>
+        <Setting
+            Name = "LogFile"
+            Value = "CSharpCream.xml"
+        />
+        <Setting
+            Name = "ProjectName"
+            Value = "CSharpCream"
+        />
+        <Setting
+            Name = "StartTime"
+            Value = "Thursday, December 13, 2007 00:20:23"
+        />
+        <Setting
+            Name = "OutputDir"
+            Value = "F:\CSharpCream.NET"
+        />
+        <Setting
+            Name = "ProjectPath"
+            Value = "F:\cream13\cream\src"
+        />
+    </Settings>
+    <Root>
+        <File
+            OldPath = "F:\cream13\cream\src\Code.java"
+            NewPath = "F:\CSharpCream.NET\Code.cs"
+        >
+            <Class Name = "jp.ac.kobe_u.cs.cream.Code" >
+                <Section Name = "operations()" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilLinkedList"
+                        Severity = "2"
+                    >Class 'java.util.LinkedList' was converted to 'System.Collections.ArrayList' which has a different behavior.</Issue>
+                </Section>
+            </Class>
+        </File>
+        <File
+            OldPath = "F:\cream13\cream\src\Condition.java"
+            NewPath = "F:\CSharpCream.NET\Condition.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\Constraint.java"
+            NewPath = "F:\CSharpCream.NET\Constraint.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\DefaultSolver.java"
+            NewPath = "F:\CSharpCream.NET\DefaultSolver.cs"
+        >
+            <Class Name = "jp.ac.kobe_u.cs.cream.DefaultSolver" >
+                <Section Name = "modifiedConstraints()" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.util.List.add' may return a different value.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratornext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.next' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratornext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.next' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilLinkedList"
+                        Severity = "2"
+                    >Class 'java.util.LinkedList' was converted to 'System.Collections.ArrayList' which has a different behavior.</Issue>
+                </Section>
+                <Section Name = "satisfy()" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratornext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.next' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratornext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.next' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+                </Section>
+                <Section Name = "infVariable()" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratornext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.next' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+                </Section>
+                <Section Name = "minimumSizeVariable()" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratornext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.next' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+                </Section>
+                <Section Name = "solve(int)" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratornext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.next' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratornext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.next' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+                </Section>
+            </Class>
+        </File>
+        <File
+            OldPath = "F:\cream13\cream\src\Domain.java"
+            NewPath = "F:\CSharpCream.NET\Domain.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\Equals.java"
+            NewPath = "F:\CSharpCream.NET\Equals.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\IBBSearch.java"
+            NewPath = "F:\CSharpCream.NET\IBBSearch.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\IntArith.java"
+            NewPath = "F:\CSharpCream.NET\IntArith.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\IntComparison.java"
+            NewPath = "F:\CSharpCream.NET\IntComparison.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\IntDomain.java"
+            NewPath = "F:\CSharpCream.NET\IntDomain.cs"
+        >
+            <Class Name = "jp.ac.kobe_u.cs.cream.IntDomain" >
+                <Section Name = "IntDomain(int,int)" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.util.ArrayList.add' may return a different value.</Issue>
+                </Section>
+                <Section Name = "clone()" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.util.ArrayList.add' may return a different value.</Issue>
+                </Section>
+                <Section Name = "next()" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                </Section>
+                <Section Name = "elements()" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1232"
+                        Severity = "2"
+                    >The following method was automatically generated and it must be implemented in order to preserve the class logic.</Issue>
+                </Section>
+                <Section Name = "delete(int,int)" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.util.ArrayList.add' may return a different value.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.util.ArrayList.add' may return a different value.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.util.ArrayList.add' may return a different value.</Issue>
+                </Section>
+                <Section Name = "cap(jp.ac.kobe_u.cs.cream.Domain)" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.util.ArrayList.add' may return a different value.</Issue>
+                </Section>
+            </Class>
+        </File>
+        <File
+            OldPath = "F:\cream13\cream\src\IntFunc.java"
+            NewPath = "F:\CSharpCream.NET\IntFunc.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\IntVariable.java"
+            NewPath = "F:\CSharpCream.NET\IntVariable.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\LocalSearch.java"
+            NewPath = "F:\CSharpCream.NET\LocalSearch.cs"
+        >
+            <Class Name = "jp.ac.kobe_u.cs.cream.LocalSearch" >
+                <Section Name = "nextSearch()" >
+                    <Issue
+                        Type = "Runtime"
+                        Number = "1042"
+                        Severity = "2"
+                    >Data types in Visual C# might be different.  Verify the accuracy of narrowing conversions.</Issue>
+                </Section>
+            </Class>
+        </File>
+        <File
+            OldPath = "F:\cream13\cream\src\Monitor.java"
+            NewPath = "F:\CSharpCream.NET\Monitor.cs"
+        >
+            <Class Name = "jp.ac.kobe_u.cs.cream.Monitor" >
+                <Section Name = "Monitor()" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javaawtComponentsetSize_int_int"
+                        Severity = "2"
+                    >Method 'java.awt.Component.setSize' was converted to 'System.Windows.Forms.Control.Size' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javaawtComponentsetVisible_boolean"
+                        Severity = "2"
+                    >Method 'java.awt.Component.setVisible' was converted to 'System.Windows.Forms.Control.Visible' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1135"
+                        Severity = "2"
+                    >'System.Windows.Forms.Application.Run' must be called to start a main form.</Issue>
+                </Section>
+                <Section Name = "add(jp.ac.kobe_u.cs.cream.Solver)" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.util.ArrayList.add' may return a different value.</Issue>
+                </Section>
+                <Section Name = "addData(jp.ac.kobe_u.cs.cream.Solver,int)" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javaawtComponentrepaint"
+                        Severity = "2"
+                    >Method 'java.awt.Component.repaint' was converted to 'System.Windows.Forms.Control.Refresh' which has a different behavior.</Issue>
+                </Section>
+                <Section Name = "wpos(int)" >
+                    <Issue
+                        Type = "Runtime"
+                        Number = "1042"
+                        Severity = "2"
+                    >Data types in Visual C# might be different.  Verify the accuracy of narrowing conversions.</Issue>
+                </Section>
+                <Section Name = "hpos(int)" >
+                    <Issue
+                        Type = "Runtime"
+                        Number = "1042"
+                        Severity = "2"
+                    >Data types in Visual C# might be different.  Verify the accuracy of narrowing conversions.</Issue>
+                </Section>
+                <Section Name = "updateImage(int,int)" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1291"
+                        Severity = "3"
+                    >The 'System.Int32' structure does not have an equivalent to NULL.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javaawtGraphicsdrawString_javalangString_int_int"
+                        Severity = "2"
+                    >Method 'java.awt.Graphics.drawString' was converted to 'System.Drawing.Graphics.DrawString' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javaawtGraphicsdrawString_javalangString_int_int"
+                        Severity = "2"
+                    >Method 'java.awt.Graphics.drawString' was converted to 'System.Drawing.Graphics.DrawString' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javaawtGraphicsdrawString_javalangString_int_int"
+                        Severity = "2"
+                    >Method 'java.awt.Graphics.drawString' was converted to 'System.Drawing.Graphics.DrawString' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javaawtGraphicsdrawString_javalangString_int_int"
+                        Severity = "2"
+                    >Method 'java.awt.Graphics.drawString' was converted to 'System.Drawing.Graphics.DrawString' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javaawtGraphicsdrawString_javalangString_int_int"
+                        Severity = "2"
+                    >Method 'java.awt.Graphics.drawString' was converted to 'System.Drawing.Graphics.DrawString' which has a different behavior.</Issue>
+                </Section>
+                <Section Name = "update(java.awt.Graphics)" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.awt.Graphics.drawImage' may return a different value.</Issue>
+                    <Issue
+                        Type = "Runtime"
+                        Number = "1101"
+                        Severity = "2"
+                    >Method 'java.awt.Graphics.drawImage' was converted to 'System.Drawing.Graphics.drawImage' which may throw an exception.</Issue>
+                </Section>
+                <Section Name = "paint(java.awt.Graphics)" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.awt.Graphics.drawImage' may return a different value.</Issue>
+                    <Issue
+                        Type = "Runtime"
+                        Number = "1101"
+                        Severity = "2"
+                    >Method 'java.awt.Graphics.drawImage' was converted to 'System.Drawing.Graphics.drawImage' which may throw an exception.</Issue>
+                </Section>
+                <Section Name = "Declarations" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javaawtFrame"
+                        Severity = "2"
+                    >Class 'java.awt.Frame' was converted to 'System.Windows.Forms.Form' which has a different behavior.</Issue>
+                </Section>
+            </Class>
+        </File>
+        <File
+            OldPath = "F:\cream13\cream\src\Network.java"
+            NewPath = "F:\CSharpCream.NET\Network.cs"
+        >
+            <Class Name = "jp.ac.kobe_u.cs.cream.Network" >
+                <Section Name = "add(jp.ac.kobe_u.cs.cream.Variable)" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.util.List.add' may return a different value.</Issue>
+                </Section>
+                <Section Name = "add(jp.ac.kobe_u.cs.cream.Constraint)" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.util.List.add' may return a different value.</Issue>
+                </Section>
+                <Section Name = "clone()" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratornext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.next' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratornext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.next' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+                </Section>
+                <Section Name = "toString()" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.lang.Object.toString' may return a different value.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratornext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.next' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.lang.Object.toString' may return a different value.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.lang.Object.toString' may return a different value.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratornext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.next' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+                </Section>
+            </Class>
+        </File>
+        <File
+            OldPath = "F:\cream13\cream\src\NotEquals.java"
+            NewPath = "F:\CSharpCream.NET\NotEquals.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\Operation.java"
+            NewPath = "F:\CSharpCream.NET\Operation.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\ParallelSolver.java"
+            NewPath = "F:\CSharpCream.NET\ParallelSolver.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\SASearch.java"
+            NewPath = "F:\CSharpCream.NET\SASearch.cs"
+        >
+            <Class Name = "jp.ac.kobe_u.cs.cream.SASearch" >
+                <Section Name = "nextSearch()" >
+                    <Issue
+                        Type = "Runtime"
+                        Number = "1042"
+                        Severity = "2"
+                    >Data types in Visual C# might be different.  Verify the accuracy of narrowing conversions.</Issue>
+                    <Issue
+                        Type = "Runtime"
+                        Number = "1042"
+                        Severity = "2"
+                    >Data types in Visual C# might be different.  Verify the accuracy of narrowing conversions.</Issue>
+                    <Issue
+                        Type = "Runtime"
+                        Number = "1042"
+                        Severity = "2"
+                    >Data types in Visual C# might be different.  Verify the accuracy of narrowing conversions.</Issue>
+                </Section>
+            </Class>
+        </File>
+        <File
+            OldPath = "F:\cream13\cream\src\Sequential.java"
+            NewPath = "F:\CSharpCream.NET\Sequential.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\Serialized.java"
+            NewPath = "F:\CSharpCream.NET\Serialized.cs"
+        >
+            <Class Name = "jp.ac.kobe_u.cs.cream.Serialized.SerializedCondition" >
+                <Section Name = "operations()" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.util.List.add' may return a different value.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilLinkedList"
+                        Severity = "2"
+                    >Class 'java.util.LinkedList' was converted to 'System.Collections.ArrayList' which has a different behavior.</Issue>
+                </Section>
+            </Class>
+        </File>
+        <File
+            OldPath = "F:\cream13\cream\src\Solution.java"
+            NewPath = "F:\CSharpCream.NET\Solution.cs"
+        >
+            <Class Name = "jp.ac.kobe_u.cs.cream.Solution" >
+                <Section Name = "Solution(jp.ac.kobe_u.cs.cream.Network)" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratornext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.next' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+                </Section>
+                <Section Name = "toString()" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratornext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.next' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.lang.Object.toString' may return a different value.</Issue>
+                </Section>
+            </Class>
+        </File>
+        <File
+            OldPath = "F:\cream13\cream\src\SolutionHandler.java"
+            NewPath = "F:\CSharpCream.NET\SolutionHandler.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\Solver.java"
+            NewPath = "F:\CSharpCream.NET\Solver.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\TabooSearch.java"
+            NewPath = "F:\CSharpCream.NET\TabooSearch.cs"
+        >
+            <Class Name = "jp.ac.kobe_u.cs.cream.TabooSearch" >
+                <Section Name = "nextSearch()" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratorhasNext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.hasNext' was converted to 'System.Collections.IEnumerator.MoveNext' which has a different behavior.</Issue>
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1073"
+                        LinkKeywordParam = "_javautilIteratornext"
+                        Severity = "2"
+                    >Method 'java.util.Iterator.next' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior.</Issue>
+                </Section>
+            </Class>
+        </File>
+        <File
+            OldPath = "F:\cream13\cream\src\Trail.java"
+            NewPath = "F:\CSharpCream.NET\Trail.cs"
+        />
+        <File
+            OldPath = "F:\cream13\cream\src\Variable.java"
+            NewPath = "F:\CSharpCream.NET\Variable.cs"
+        >
+            <Class Name = "jp.ac.kobe_u.cs.cream.Variable" >
+                <Section Name = "updateDomain(jp.ac.kobe_u.cs.cream.Domain,jp.ac.kobe_u.cs.cream.Trail)" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1043"
+                        Severity = "2"
+                    >The equivalent in .NET for method 'java.lang.Object.toString' may return a different value.</Issue>
+                </Section>
+                <Section Name = "Declarations" >
+                    <Issue
+                        Type = "ToDo"
+                        Number = "1232"
+                        Severity = "2"
+                    >The following method was automatically generated and it must be implemented in order to preserve the class logic.</Issue>
+                </Section>
+            </Class>
+        </File>
+        <Issue
+            Type = "Global Warning"
+            Number = "1274"
+            Severity = "2"
+        >Interaction between members of a class may differ because their execution sequence is different. </Issue>
+        <Issue
+            Type = "Global Warning"
+            Number = "1297"
+            Severity = "2"
+        >Enumerations should be started first before accessing their data by calling their MoveNext method.</Issue>
+        <Issue
+            Type = "Global Warning"
+            Number = "1225"
+            Severity = "2"
+        >Type castings between primitive types may have different behavior.</Issue>
+        <Issue
+            Type = "Global Note"
+            Number = "1024"
+            Severity = "3"
+        >Anonymous classes were converted to nested classes.</Issue>
+        <Issue
+            Type = "Global Warning"
+            Number = "1264"
+            Severity = "2"
+        >Events behave differently in the .NET Framework.</Issue>
+        <Issue
+            Type = "Global Warning"
+            Number = "1223"
+            Severity = "3"
+        >Output of bidirectional languages will not display as expected.</Issue>
+    </Root>
+</ConversionLog>
+

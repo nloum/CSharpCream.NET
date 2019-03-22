@@ -1,0 +1,570 @@
+﻿using System.Collections;
+using Cream;
+
+namespace Cream.AllenTemporal
+{
+    public class AllenSolver : DefaultSolver
+    {
+
+        #region Private fields
+
+        private IList AC3Queue;
+        private IList PC2Queue;
+        private IList[] varNetwork;
+        private bool reductionDone = false;
+        private const int STEP = 0;
+        private const int ENUM = 1;
+        private const int BISECT = 2;
+        private readonly int choice = STEP;
+        private IList[] disjuctiveCons;
+
+        #endregion
+
+        #region Constructors
+
+        public AllenSolver(Network network, int options, string name)
+            : base(network, options, name)
+        {
+        }
+
+        public AllenSolver(Network network, string name) : base(network, name)
+        {
+        }
+
+        public AllenSolver(Network network, int options) : base(network, options)
+        {
+        }
+
+        public AllenSolver(Network network) : base(network)
+        {
+        }
+
+        #endregion 
+
+        #region Private methods
+
+        private int[] getEvents(Variable v1, Variable v2)
+        {
+            IEnumerator cs = network.Constraints.GetEnumerator();
+            int[] temp, events;
+            temp = new int[13];
+            for (int i = 0; i < 13; i++)
+            {
+                temp[i] = -1;
+            }
+            int counter = 0;
+            while (cs.MoveNext())
+            {
+                Constraint c = (Constraint)cs.Current;
+                if ((c is AllenConstraint) &&
+                    (((c as AllenConstraint).Vars[0]) == v1) &&
+                    (((c as AllenConstraint).Vars[1]) == v2))
+                {
+                    AllenConstraint c1 = (AllenConstraint)c;
+                    temp[counter++] = c1.AllenEvent;
+                }
+            }
+            events = new int[counter];
+            for (int j = 0; j < counter; j++)
+            {
+                events[j] = temp[j];
+            }
+            return events;
+        }
+
+        private void queueUpVarsForPC()
+        {
+            IEnumerator v1 = network.Variables.GetEnumerator();
+            varNetwork = new IList[network.Variables.Count];
+            PC2Queue = new ArrayList();
+            int rowC = 0;
+            while (v1.MoveNext())
+            {
+                IEnumerator v2 = network.Variables.GetEnumerator();
+                varNetwork[rowC] = new ArrayList();
+                while (v2.MoveNext())
+                {
+                    if (v1.Current != v2.Current)
+                    {
+                        object[] con1 = new object[2];
+                        con1[0] = v1.Current; // first variable
+                        con1[1] = v2.Current; // second variable
+                        PC2Queue.Add(con1); // add to queue
+                        int[] events = getEvents((Variable)v1.Current, (Variable)v2.Current);
+                        events = AllenEvents.Union(events,AllenEvents.Inverse(getEvents((Variable)v2.Current, (Variable)v1.Current)));
+                        if (events.Length == 0)
+                        {
+                            events = AllenEvents.I; // assign I interval to events;
+                        }
+                        object[] con2 = new object[3];
+                        con2[0] = con1[0];
+                        con2[1] = con1[1];
+                        con2[2] = events; // allen events
+                        varNetwork[rowC].Add(con2);
+                    }
+                    else
+                    {
+                        varNetwork[rowC].Add(new object[3]);     // add this item just to be consistent with the network
+                    }
+                }
+                rowC++;
+            }
+        }
+
+        private void convertNumericToSymbolic()
+        {
+            IEnumerator cs = network.Constraints.GetEnumerator(); // do it only once
+            IList constraintsToBeDeleted = new ArrayList();
+            while (cs.MoveNext())
+            {
+                if (!((AllenConstraint) cs.Current).numericToSymbolic())
+                {
+                    constraintsToBeDeleted.Add(cs.Current);
+                    if (network.Constraints.Count == 0) // think about it.
+                    {
+                        break;
+                    }
+                }
+            }
+            foreach (Constraint c in constraintsToBeDeleted)
+            {
+                network.Constraints.Remove(c);
+            }
+        }
+
+        private void PathConsistency()
+        {
+            if (network.Variables.Count < 3)
+            {
+                return;
+            }
+            queueUpVarsForPC();
+            while (PC2Queue.Count > 0)
+            {
+                object[] obj = (object[])PC2Queue[0];
+                AllenVariable x = (AllenVariable) obj[0];
+                AllenVariable y = (AllenVariable) obj[1];
+                int xInd = x.Index;
+                int yInd = y.Index;
+                PC2Queue.RemoveAt(0);
+                IEnumerator kv = network.Variables.GetEnumerator();
+                while (kv.MoveNext())
+                {
+                    AllenVariable k = (AllenVariable)kv.Current;
+                    if (((k) != x) && (k) != y)
+                    {
+                        int kInd = k.Index;
+
+                        object[] objXK = (object[])varNetwork[xInd][kInd];
+                        int[] Cxk = (int[])objXK[2];
+
+                        object[] objXY = (object[])varNetwork[xInd][yInd];
+                        int[] Cxy = (int[])objXY[2];
+
+                        object[] objYK = (object[])varNetwork[yInd][kInd];
+                        int[] Cyk = (int[])objYK[2];
+
+                        int[] t = AllenEvents.Composition(Cxy, Cyk);
+                        t = AllenEvents.Intersection(t, Cxk);
+                        if (AllenEvents.isEqual(t, Cxk) != true)
+                        {
+                            object[] con2 = (object[]) varNetwork[xInd][kInd];
+                            con2[2] = t; // allen events
+                            varNetwork[xInd][kInd] = con2; // Cxk = t
+                            con2 = (object[])varNetwork[kInd][xInd];
+                            //con2[0] = k;
+                            //con2[1] = x;
+                            con2[2] = AllenEvents.Inverse(t); // allen events
+                            varNetwork[kInd][xInd] = con2; // Ckx = t
+                            object[] con1 = new object[2];
+                            con1[0] = x; // first variable
+                            con1[1] = k; // second variable
+                            PC2Queue.Add(con1);
+                        }
+                        
+                        objXY = (object[])varNetwork[xInd][yInd];
+                        Cxy = (int[])objXY[2];
+
+                        object[] objKY = (object[])varNetwork[kInd][yInd];
+                        int[] Cky = (int[])objKY[2];
+
+                        object[] objKX = (object[])varNetwork[kInd][xInd];
+                        int[] Ckx = (int[])objKX[2];
+                        t = AllenEvents.Composition(Ckx, Cxy);
+                        t = AllenEvents.Intersection(t, Cky);
+                        if (AllenEvents.isEqual(t, Cky) != true)
+                        {
+                            object[] con2 = (object[])varNetwork[yInd][kInd];
+                            con2[2] = AllenEvents.Inverse(t); // allen events
+                            varNetwork[yInd][kInd] = con2;  // Cxk = t
+                            object[] con = new object[2];
+                            con[0] = k; // first variable
+                            con[1] = y; // second variable
+                            PC2Queue.Add(con);
+                        }
+                    }
+                }
+
+            }
+            // remove the old constraints
+            while (network.Constraints.Count > 0)
+            {
+                network.Constraints.RemoveAt(0);
+            }
+
+            // add the new constraints
+            for (int i=0; i<network.Variables.Count;i++)
+            {
+                for (int j = i + 1; j < network.Variables.Count; j++)
+                {
+                    object[] obj1 = (object[])varNetwork[i][j];
+                    int[] a = (int[])obj1[2];
+                    if (AllenEvents.isEqual(a, AllenEvents.I) != true)
+                    {
+                        for (int k = 0; k < a.Length; k++)
+                        {
+                            int aa = a[k];
+                            Variable var1 = (Variable) obj1[0];
+                            Variable var2 = (Variable) obj1[1];
+                            new AllenConstraint(network, aa, var1, var2);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void queueUpVarsForAC()
+        {
+            int n = network.Variables.Count;
+            AC3Queue = new ArrayList();
+            for (int i = 0; i < n; i++)
+            {
+                AllenVariable v1 = (AllenVariable) (network.Variables[i]);
+                for (int j = i + 1; j < n; j++)
+                {
+                    AllenVariable v2 = (AllenVariable)(network.Variables[j]);
+                    object[] con = new object[3];
+                    con[0] = v1; // first variable
+                    con[1] = v2; // second variable
+                    int[] events = getEvents(v1, v2);
+                    if (events.Length>0)
+                    {
+                        con[2] = events;
+                        AC3Queue.Add(con); // add to queue
+                    }
+                    con = new object[3];
+                    con[0] = v2;
+                    con[1] = v1;
+                    events = getEvents(v2, v1);
+                    if (events.Length>0)
+                    {
+                        con[2] = events;
+                        AC3Queue.Add(con);
+                    }
+                }
+            }
+        }
+
+        private static bool compatible(int a, int b, int d1, int d2, int[] relations)
+        {
+            for (int i=0; i<relations.Length;i++)
+            {
+                if (AllenEvents.satisfy(relations[i], a, b, d1, d2))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        private static bool Revise(Variable x, Variable y, int[] relations)
+        {
+            AllenDomain d1 = (AllenDomain)x.Domain;
+            AllenDomain d2 = (AllenDomain)y.Domain;
+            bool rev = false;
+            if (d1.Empty)
+            {
+                return false;
+            }
+            if (d2.Empty)
+            {
+                return false;
+            }
+            for (int st1 = d1.min(); st1 <= d1.max(); st1 += d1.Step)
+            {
+                bool found = false;
+                for (int st2 = d2.min(); st2 <= d2.max(); st2 += d2.Step)
+                {
+                    if (compatible(st1, st2, d1.Duration, d2.Duration, relations))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    rev = true;
+                    ((AllenDomain)(x.Domain)).remove(st1);
+                    if (x.Domain.size() == 0)
+                    {
+                        break;
+                    }
+                }
+            }
+            return rev;
+        }
+
+        private bool ArcConsistency()
+        {
+            queueUpVarsForAC();
+            int n = network.Variables.Count;
+            while (AC3Queue.Count > 0)
+            {
+                object[] obj = (object[]) AC3Queue[0];
+                AllenVariable x = (AllenVariable) obj[0];
+                AllenVariable y = (AllenVariable) obj[1];
+                int[] relations = (int[]) obj[2];
+                AC3Queue.RemoveAt(0);
+                if (Revise(x, y, relations))
+                {
+                    if (x.Domain.size() > 0)
+                    {
+                        for (int i = 0; i < n; i++)
+                        {
+                            AllenVariable v1 = (AllenVariable) (network.Variables[i]);
+                            if ((v1 != y) && (v1 != x))
+                            {
+                                AllenVariable v2 = (AllenVariable) x.Clone();
+                                object[] con = new object[3];
+                                con[0] = v1; // first variable
+                                con[1] = v2; // second variable
+                                int[] events = getEvents(v1, v2);
+                                if (events.Length > 0)
+                                {
+                                    con[2] = events;
+                                    AC3Queue.Add(con); // add to queue
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        private void getDisjunctiveConstraints()
+        {
+            int n = network.Variables.Count;
+            int noOfPossibleEdges = n*(n - 1)/2;
+            //for (int i = 1; i < n; noOfPossibleEdges += i, i++) ;
+            IList[] tempDisjuctiveCons = new IList[noOfPossibleEdges];
+            int c = 0;
+            int realc = 0;
+            for (int i = 0; i < n; i++)
+            {
+                AllenVariable v1 = (AllenVariable) (network.Variables[i]);
+                for (int j = i + 1; j < n; j++)
+                {
+                    tempDisjuctiveCons[c] = new ArrayList();
+                    AllenVariable v2 = (AllenVariable) (network.Variables[j]);
+                    IEnumerator cs = network.Constraints.GetEnumerator();
+                    while (cs.MoveNext())
+                    {
+                        AllenVariable var1 = (AllenVariable) ((AllenConstraint) cs.Current).Vars[0];
+                        AllenVariable var2 = (AllenVariable) ((AllenConstraint) cs.Current).Vars[1];
+                        if (((var1 == v1) && (var2 == v2)) || ((var1 == v2) && (var2 == v1)))
+                        {
+                            tempDisjuctiveCons[c].Add(cs.Current);
+                            
+                        }
+                    }
+                    if (tempDisjuctiveCons[c].Count > 0)
+                    {
+                        realc++;
+                    }
+                    c++;
+                }
+            }
+            disjuctiveCons = new IList[realc];
+            int cc = 0;
+            for (int j = 0; j < c; j++)
+            {
+                if (tempDisjuctiveCons[j].Count > 0)
+                {
+                    disjuctiveCons[cc++] = tempDisjuctiveCons[j];
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Checks the consistency of the disjunctive constraints between every two varaibles in the
+        /// network
+        /// </summary>
+        /// <returns>returns true if the disjunctive of all the constraints between every two variables
+        /// is true, otherwise false.</returns>
+        private bool satisfyDisjCons()
+        {
+            IEnumerator dc = disjuctiveCons.GetEnumerator();
+            while (dc.MoveNext())
+            {
+                ArrayList edgeConstraints = (ArrayList) dc.Current;
+                bool satisfied = false;
+                foreach (Constraint c in edgeConstraints)
+                {
+                    satisfied |= c.satisfy(trail); // no real update in the domain
+                }
+                if (!satisfied)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        #endregion
+
+        #region Proteced Methods
+        /// <summary>
+        /// This method is based on Dr Malek Mouhoub Tempor application
+        /// http://www2.cs.uregina.ca/~mouhoubm/=postscript/=papers/32mouh.ps.gz
+        ///  </summary>
+        /// <param name="level"></param>
+        protected internal override void solve(int level)
+        {
+            if (!reductionDone)  // do it only once
+            {
+                convertNumericToSymbolic(); // convert from nuymeric to symbolic
+                PathConsistency(); //PC2
+                if (!ArcConsistency()) //AC3.1
+                {
+                    return;
+                }
+                //convertNumericToSymbolic(); // convert from nuymeric to symbolic
+                
+                getDisjunctiveConstraints(); // get all edges' disjunctive constraints
+                reductionDone = true;
+            }
+
+            Variable objective = network.Objective;
+            while (!Aborted)
+            {
+                if (isOption(MINIMIZE))
+                {
+                    if (bestValue < IntDomain.MAX_VALUE)
+                    {
+                        IntDomain d = (IntDomain)objective.Domain;
+                        d = d.delete(bestValue, IntDomain.MAX_VALUE);
+                        if (d.Empty)
+                            break;
+                        objective.updateDomain(d, trail);
+                    }
+                }
+                else if (isOption(MAXIMIZE))
+                {
+                    if (bestValue > IntDomain.MIN_VALUE)
+                    {
+                        IntDomain d = (IntDomain)objective.Domain;
+                        d = d.delete(IntDomain.MIN_VALUE, bestValue);
+                        if (d.Empty)
+                            break;
+                        objective.updateDomain(d, trail);
+                    }
+                }
+                bool sat = satisfyDisjCons();
+                if (Aborted || !sat)
+                     break;
+                Variable v0 = selectVariable();
+                if (v0 == null)
+                {
+                    IEnumerator v = network.Variables.GetEnumerator();
+                    while (v.MoveNext())
+                    {
+                        if (((AllenVariable) v.Current).Domain.size() == 0)
+                        {
+                            break;
+                        }
+                    }
+                    solution = new Solution(network);
+                    success();
+                    break;
+                }
+                if (v0.Domain is AllenDomain)
+                {
+                    AllenDomain d = (AllenDomain)v0.Domain;
+                    switch (choice)
+                    {
+
+                        case STEP:
+                            int value_ = d.min();
+                            if (!Aborted)
+                            {
+                                int t0 = trail.size();
+                                v0.updateDomain(new AllenDomain(value_, value_+d.Duration, d.Duration, d.Step), trail);
+                                solve(level + 1);
+                                trail.undo(t0);
+                            }
+                            if (!Aborted)
+                            {
+                                v0.updateDomain(d.delete(value_), trail);
+                                continue;
+                            }
+                            break;
+
+                        case ENUM:
+                            IEnumerator iter = v0.Domain.elements();
+                            while (!Aborted && iter.MoveNext())
+                            {
+                                int t0 = trail.size();
+                                v0.updateDomain((Domain)iter.Current, trail);
+                                solve(level + 1);
+                                trail.undo(t0);
+                            }
+                            break;
+
+                        case BISECT:
+                            int mid;
+                            if (d.min() + 1 == d.max())
+                                mid = d.min();
+                            else
+                                mid = (d.min() + d.max()) / 2;
+                            if (!Aborted)
+                            {
+                                int t0 = trail.size();
+                                v0.updateDomain(d.capInterval(d.min(), mid), trail);
+                                solve(level + 1);
+                                trail.undo(t0);
+                            }
+                            if (!Aborted)
+                            {
+                                int t0 = trail.size();
+                                v0.updateDomain(d.capInterval(mid + 1, d.max()), trail);
+                                solve(level + 1);
+                                trail.undo(t0);
+                            }
+                            break;
+                    }
+                }
+                else
+                {
+                    IEnumerator iter = v0.Domain.elements();
+                    while (!Aborted && iter.MoveNext())
+                    {
+                        int t0 = trail.size();
+                        v0.updateDomain((Domain)iter.Current, trail);
+                        solve(level + 1);
+                        trail.undo(t0);
+                    }
+                }
+                break;
+            }
+        }
+
+
+        #endregion
+
+    }
+}

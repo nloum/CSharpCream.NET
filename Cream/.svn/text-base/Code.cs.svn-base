@@ -1,0 +1,64 @@
+using System;
+using  Cream;
+namespace  Cream
+{
+	
+	public class Code : ICloneable
+	{
+		virtual public Network To
+		{
+			set
+			{
+				for (int i = 0; i < conditions.Length; i++)
+				{
+					if (conditions[i] == null)
+					{
+						value.getConstraint(i).clearCondition();
+					}
+					else
+					{
+						conditions[i].To = value;
+					}
+				}
+			}
+			
+		}
+		public Condition[] conditions;
+		
+		private Code()
+		{
+		}
+		
+		public Code(Network network)
+		{
+			System.Collections.IList constraints = network.Constraints;
+			conditions = new Condition[constraints.Count];
+			for (int i = 0; i < conditions.Length; i++)
+			{
+				Constraint c = network.getConstraint(i);
+				conditions[i] = c.extractCondition();
+			}
+		}
+		
+		public virtual Object Clone()
+		{
+			Code code = new Code();
+			code.conditions = new Condition[conditions.Length];
+			conditions.CopyTo(code.conditions, 0);
+			return code;
+		}
+		
+		public virtual System.Collections.IList operations()
+		{
+			System.Collections.IList operations = new System.Collections.ArrayList();
+			for (int i = 0; i < conditions.Length; i++)
+			{
+				if (conditions[i] != null)
+				{
+					SupportClass.ICollectionSupport.AddAll(operations, conditions[i].operations());
+				}
+			}
+			return operations;
+		}
+	}
+}

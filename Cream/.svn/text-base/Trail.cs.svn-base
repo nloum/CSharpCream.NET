@@ -1,0 +1,31 @@
+using System;
+using  Cream;
+namespace  Cream
+{
+	
+	public class Trail
+	{
+		private System.Collections.ArrayList trail = new System.Collections.ArrayList();
+		
+		public virtual int size()
+		{
+			return trail.Count;
+		}
+		
+		public virtual void  push(Variable v)
+		{
+			Object[] pair = new Object[]{v, v.Domain};
+			trail.Add(pair);
+		}
+		
+		public virtual void  undo(int size0)
+		{
+			for (int size = trail.Count; size > size0; size--)
+			{
+				Object[] pair = (Object[]) SupportClass.StackSupport.Pop(trail);
+				Variable v = (Variable) pair[0];
+				v.Domain = (Domain) pair[1];
+			}
+		}
+	}
+}

@@ -1,0 +1,497 @@
+/*
+* DefaultSolver.cs
+*/
+using System;
+using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting; 
+using System.Linq;
+using System.Collections;
+
+namespace  Cream
+{
+    /// <summary> A branch-and-bound solver.</summary>
+    /// <seealso cref="Solver">
+    /// </seealso>
+    /// <since> 1.0
+    /// </since>
+    /// <version>  1.0, 01/12/08
+    /// </version>
+    /// <author>  Based on Java Solver by : Naoyuki Tamura (tamura@kobe-u.ac.jp)
+    ///           C#: Ali Hmer (Hmer200a@uregina.ca)
+    /// </author>
+    public class DefaultSolver:Solver
+    {
+        protected internal Trail trail = new Trail();
+        private const int STEP = 0;
+        private const int ENUM = 1;
+        private const int BISECT = 2;
+        private const int SOFT = 3;
+        private int choice = SOFT;
+
+        public int BestSolutionWeight {get; set; }
+
+        /// <summary> Constructs a branch-and-bound solver for the given network.
+        /// This constructor is equivalent to <tt>DefaultSolver(network, DEFAULT, null)</tt>.
+        /// </summary>
+        /// <param name="network">the constraint network
+        /// </param>
+        public DefaultSolver(Network network):this(network, DEFAULT, null)
+        {
+        }
+		
+        /// <summary> Constructs a branch-and-bound solver for the given network and options.
+        /// This constructor is equivalent to <tt>DefaultSolver(network, options, null)</tt>.
+        /// </summary>
+        /// <param name="network">the constraint network
+        /// </param>
+        /// <param name="options">the options for search strategy
+        /// </param>
+        public DefaultSolver(Network network, int options):this(network, options, null)
+        {
+        }
+		
+        /// <summary> Constructs a branch-and-bound solver for the given network and name.
+        /// This constructor is equivalent to <tt>DefaultSolver(network, DEFAULT, name)</tt>.
+        /// </summary>
+        /// <param name="network">the constraint network
+        /// </param>
+        /// <param name="name">the name of the solver
+        /// </param>
+        public DefaultSolver(Network network, String name):this(network, DEFAULT, name)
+        {
+        }
+		
+        /// <summary> Constructs a branch-and-bound solver for the given network, options, and name.</summary>
+        /// <param name="network">the constraint network
+        /// </param>
+        /// <param name="options">the options for search strategy, or DEFAULT for default search strategy
+        /// </param>
+        /// <param name="name">the name of the solver, or <tt>null</tt> for a default name
+        /// </param>
+        public DefaultSolver(Network network, int options, String name):base(network, options, name)
+        {
+        }
+
+        public int Choice
+        {
+            get { return choice; }
+            set
+            {
+                if (0 <= value && value <= 3)
+                {
+                    choice = value;
+                }
+                else
+                {
+                    choice = 0;
+                }
+            }
+        }
+
+        protected IList modifiedConstraints()
+        {
+            var modifiedList = from cons in network.Constraints.Cast<Constraint>()
+                               where cons.isModified()
+                               select cons;
+            IList list = modifiedList.ToList();
+            var vs = from vars in network.Variables.Cast<Variable>()
+                     select vars;
+            foreach  (var v in vs)
+            {
+                v.clearModified();
+            }
+            return list;
+        }
+		
+        /// <summary>
+		/// The satisfy process will get rid of the domains items that are satisfied
+        /// with the constraints
+		/// </summary>
+		/// <returns>boolean value represents whether the constraints are satisfied or not</returns>
+        protected internal virtual bool satisfy()
+        {
+            bool changed = true;
+            while (!Aborted && changed)
+            {
+                var modCs = modifiedConstraints().Cast<Constraint>();
+                bool hardChanged = true;
+                while (!Aborted && hardChanged)
+                {
+                    var hardConstraints = from cons in modCs
+                                          where cons.CType == ConstraintTypes.Hard
+                                          select cons;
+                    foreach (Constraint c in hardConstraints)
+                    {
+                        if (!c.satisfy(trail))
+                        {
+                            //network.Constraints.Remove(c);
+                            return false; // hard constraint broken track back
+                        }
+                    }
+                    hardChanged = false;
+                    var modifedVars = from vars in network.Variables.Cast<Variable>()
+                                      where vars.isModified()
+                                      select vars;
+                    if (modifedVars.Count() > 0)
+                    {
+                        foreach (Variable v in modifedVars)
+                        {
+                            v.clearModified();
+                        }
+                        hardChanged = true;
+                    }
+                }
+                bool softChanged = true;
+                changed = false;
+                /////////////////
+                //var groups = modCs.GroupBy(doc => doc.CType ); 
+                //foreach ( var group in groups )
+                //{
+                //    Console.WriteLine(" {0}: ", group.Key);
+                //    foreach(var doc in group)
+                //    Console.WriteLine(" {0}", doc);
+                //}
+                ///// ////////////
+                while (!Aborted && softChanged)
+                {
+                    //var softConstraints = modCs.All(mods => mods.CType == ConstraintTypes.Soft);
+                    var softConstraints = from cons in modCs
+                                          where cons.CType == ConstraintTypes.Soft
+                                          select cons;
+                    int totalWeight = 0;
+                    foreach (Constraint c in softConstraints)
+                    {
+                        if (c.isSatisfied())
+                        {
+                            totalWeight += c.Weight;
+
+                            if (totalWeight > BestSolutionWeight && BestSolutionWeight != -1)
+                            {
+                                return false; // total weight of this partial solution
+                                // is greater then total weight of the best solution 
+                                // track back
+                            }
+                        }
+                    }
+                    softChanged = false;
+                    var modifedVars = from vars in network.Variables.Cast<Variable>()
+                                      where vars.isModified()
+                                      select vars;
+                    if (modifedVars.Count() > 0)
+                    {
+                        foreach (Variable v in modifedVars)
+                        {
+                            v.clearModified();
+                        }
+                        softChanged = true;
+                        changed = true;
+                    }
+                }
+
+            }
+            return true;
+        }
+		
+        protected internal virtual Variable infVariable()
+        {
+            Variable v_min = null;
+            int inf_min = Int32.MaxValue;
+            foreach (Variable v in network.Variables)
+            {
+                Domain d = v.Domain;
+                if (!(d is IntDomain))
+                    continue;
+                if (d.size() <= 1)
+                    continue;
+                int inf = ((IntDomain) d).min();
+                if (inf < inf_min)
+                {
+                    v_min = v;
+                    inf_min = inf;
+                }
+            }
+            return v_min;
+        }
+		
+        protected internal virtual Variable minimumSizeVariable()
+        {
+            Variable v_min = null;
+            int min_size = Int32.MaxValue;
+            foreach (Variable v in network.Variables)
+            {
+                int size = v.Domain.size();
+                if (1 < size && size <= min_size)
+                {
+                    v_min = v;
+                    min_size = size;
+                }
+            }
+            return v_min;
+        }
+		
+        protected internal virtual Variable selectVariable()
+        {
+            Variable v = null;
+            if (isOption(MINIMIZE) || isOption(MAXIMIZE))
+            {
+                v = infVariable();
+                // v = minimumSizeVariable();
+            }
+            if (v == null)
+            {
+                v = minimumSizeVariable();
+            }
+            return v;
+        }
+		
+        protected internal virtual void  solve(int level)
+        {
+            Variable objective = network.Objective;
+            while (!Aborted)
+            {
+                if (isOption(MINIMIZE))
+                {
+                    if (bestValue < IntDomain.MAX_VALUE)
+                    {
+                        var d = (IntDomain) objective.Domain;
+                        d = d.delete(bestValue, IntDomain.MAX_VALUE);
+                        if (d.Empty)
+                            break;
+                        objective.updateDomain(d, trail);
+                    }
+                }
+                else if (isOption(MAXIMIZE))
+                {
+                    if (bestValue > IntDomain.MIN_VALUE)
+                    {
+                        var d = (IntDomain) objective.Domain;
+                        d = d.delete(IntDomain.MIN_VALUE, bestValue);
+                        if (d.Empty)
+                            break;
+                        objective.updateDomain(d, trail);
+                    }
+                }
+                bool sat = satisfy();
+                //int l = level;
+                if (Aborted || !sat)
+                    break;
+                Variable v0 = selectVariable();
+                if (v0 == null)
+                {
+                    getBestWeight();
+                    solution = new Solution(network) {Weight = BestSolutionWeight};
+                    success();
+                    break;
+                }
+                if (v0.Domain is IntDomain)
+                {
+                    var d = (IntDomain) v0.Domain;
+                    switch (choice)
+                    {
+                        case SOFT:
+                            
+                            int value1 = getValueWithSoftSatisfied(v0);
+                            if (!Aborted)
+                            {
+                                int t0 = trail.size();
+                                v0.updateDomain(new IntDomain(value1), trail);
+                                solve(level + 1);
+                                trail.undo(t0);
+                            }
+                            if (!Aborted)
+                            {
+                                v0.updateDomain(d.delete(value1), trail);
+                                continue;
+                            }
+                            break;
+
+                        case STEP: 
+                            int value_ = d.min();
+                            if (!Aborted)
+                            {
+                                int t0 = trail.size();
+                                v0.updateDomain(new IntDomain(value_), trail);
+                                solve(level + 1);
+                                trail.undo(t0);
+                            }
+                            if (!Aborted)
+                            {
+                                v0.updateDomain(d.delete(value_), trail);
+                                continue;
+                            }
+                            break;
+						
+                        case ENUM: 
+                            System.Collections.IEnumerator iter = v0.Domain.elements();
+                            while (!Aborted && iter.MoveNext())
+                            {
+                                int t0 = trail.size();
+                                v0.updateDomain((Domain) iter.Current, trail);
+                                solve(level + 1);
+                                trail.undo(t0);
+                            }
+                            break;
+						
+                        case BISECT: 
+                            int mid;
+                            if (d.min() + 1 == d.max())
+                                mid = d.min();
+                            else
+                                mid = (d.min() + d.max()) / 2;
+                            if (!Aborted)
+                            {
+                                int t0 = trail.size();
+                                v0.updateDomain(d.capInterval(d.min(), mid), trail);
+                                solve(level + 1);
+                                trail.undo(t0);
+                            }
+                            if (!Aborted)
+                            {
+                                int t0 = trail.size();
+                                v0.updateDomain(d.capInterval(mid + 1, d.max()), trail);
+                                solve(level + 1);
+                                trail.undo(t0);
+                            }
+                            break;
+                    }
+                }
+                else
+                {
+                    System.Collections.IEnumerator iter = v0.Domain.elements();
+                    while (!Aborted && iter.MoveNext())
+                    {
+                        int t0 = trail.size();
+                        //Domain d1 = v0.Domain;
+                        v0.updateDomain((Domain) iter.Current, trail);
+                        //if (v0.Domain.elements() != d1.elements())
+                        solve(level + 1);
+                        trail.undo(t0);
+                    }
+                }
+                break;
+            }
+        }
+
+        private int getValueWithSoftSatisfied(Variable v0)
+        {
+            // get all soft constraints
+            var softConstraints = from soft in (network.Constraints.Cast<Constraint>())
+                                  where soft.CType == ConstraintTypes.Soft
+                                  select soft;
+
+            //get the distinct values of the variables associated with all equal soft constraints with V0
+            var softEqualsWithV0 =
+                (softConstraints.
+                    Where(soft => soft is Equals)).Cast<Equals>().
+                    Where(cons => (cons.Vars[0] == v0)).
+                    Where(cons => ((IntDomain) cons.Vars[0].Domain).
+                                      contains(((IntDomain) cons.Vars[1].Domain).min())).
+                    Select(doms => ((IntDomain) doms.Vars[1].Domain).min()).Distinct();
+
+            //Assert.IsFalse(softEqualsWithV0.Count() > 0);
+
+            //get the distinct values of the variables associated with all not equal soft constraints with V0
+            var softNotEqualWithV0 =
+                (softConstraints.Where(soft => soft is NotEquals)).Cast<NotEquals>().
+                    Where(cons => (cons.Vars[0] == v0)).
+                    Select(minDoms => ((IntDomain) minDoms.Vars[1].Domain).min()).Distinct();
+
+            var varsDomainAlreadyAssigned = (network.Variables.Cast<Variable>().
+                Where(vars => vars.Domain.size() == 1 && vars.IsValueType == false).
+                Select(vars => ((IntDomain) vars.Domain).min()));
+                                              
+            var commonVarsDomain = new List<int>();
+            foreach (var ec in softEqualsWithV0)
+            {
+                commonVarsDomain.Add(ec);
+            }
+            foreach (var nc in softNotEqualWithV0)
+            {
+                bool found = false;
+                foreach (var ec in softEqualsWithV0)
+                {
+                    if (ec == nc)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    commonVarsDomain.Add(nc);
+                }
+            }
+            
+            var counter = new int[commonVarsDomain.Count];
+            
+            int c1 = 0;
+            foreach (var cd in commonVarsDomain)
+            {
+                foreach (var vr in varsDomainAlreadyAssigned)
+                {
+                    if (vr == cd)
+                    {
+                        counter[c1]++;
+                    }
+                }
+                c1++;
+            }
+
+            var d0 = (IntDomain) v0.Domain;
+            if (counter.Count() > 0)
+            {
+                int minIndex = 0;
+                int minNumber = counter[0];
+                for (int i = 0; i < counter.Length; i++)
+                {
+                    if (counter[i] < minNumber)
+                    {
+                        minIndex = i;
+                        minNumber = counter[i];
+                    }
+                }
+                return commonVarsDomain.ElementAt(minIndex);
+            }
+            return d0.min();
+
+        }
+
+        private void getBestWeight()
+        {
+            var modCs = network.Constraints.Cast<Constraint>();
+            var softConstraints = from cons in modCs
+                                  where cons.CType == ConstraintTypes.Soft
+                                  select cons;
+            int totalWeight = 0;
+            foreach (Constraint c in softConstraints)
+            {
+                if (c.isSatisfied())
+                {
+                    totalWeight += c.Weight;
+                }
+            }
+            BestSolutionWeight = totalWeight == 0 ? -1 : totalWeight;
+        }
+
+        public override void start(long timeout)
+        {
+            BestSolutionWeight = -1;
+            base.start(timeout);
+        }
+
+        public override void  Run()
+        {
+            clearBest();
+            trail = new Trail();
+            solve(0);
+            trail.undo(0);
+            fail();
+        }
+    }
+
+    public class ProcessTotals
+    {
+        public long VirtualMemorySize64 { get; set; } 
+        public long WorkingSet64 { get; set; }
+    }
+}

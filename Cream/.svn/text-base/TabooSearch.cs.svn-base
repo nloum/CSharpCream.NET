@@ -1,0 +1,114 @@
+using System;
+using System.Collections;
+
+namespace  Cream
+{
+	
+	public class TabooSearch:LocalSearch
+	{
+		public int tabooLength = 16;
+		protected internal Operation[] taboo;
+		protected internal int taboo_i;
+		
+		public TabooSearch(Network network):this(network, DEFAULT, null)
+		{
+		}
+		
+		public TabooSearch(Network network, int option):this(network, option, null)
+		{
+		}
+		
+		public TabooSearch(Network network, String name):this(network, DEFAULT, name)
+		{
+		}
+		
+		public TabooSearch(Network network, int option, String name):base(network, option, name)
+		{
+			ExchangeRate = 0.8;
+		}
+		
+		protected internal virtual void  clearTaboo()
+		{
+			taboo = new Operation[tabooLength];
+			for (int i = 0; i < taboo.Length; i++)
+			{
+				taboo[i] = null;
+			}
+			taboo_i = 0;
+		}
+		
+		protected internal virtual bool isTaboo(Operation op, Operation[] taboo_)
+		{
+			if (taboo_ == null)
+				return false;
+			for (int i = 0; i < taboo_.Length; i++)
+			{
+				if (taboo_[i] != null && op.isTaboo(taboo_[i]))
+					return true;
+			}
+			return false;
+		}
+		
+		protected internal virtual void  addTaboo(Operation op)
+		{
+			taboo[taboo_i] = op;
+			taboo_i = (taboo_i + 1) % taboo.Length;
+		}
+		
+		protected internal override void  startSearch()
+		{
+			clearTaboo();
+			solver = new DefaultSolver(network, option);
+			solution = solver.findFirst();
+		}
+		
+		protected internal override void  nextSearch()
+		{
+			Operation locallyBestOp = null;
+			Solution locallyBestSol = null;
+			int locallyBest = IntDomain.MAX_VALUE;
+			solution = candidate();
+			Code code = solution.Code;
+			while (!Aborted)
+			{
+				IEnumerator ops = code.operations().GetEnumerator();
+				while (ops.MoveNext() && !Aborted)
+				{
+					Operation op = (Operation) ops.Current;
+                    if (isTaboo(op, taboo))
+                    {
+                        continue;
+                    }
+				    code.To = network;
+					op.applyTo(network);
+					Solution sol = solver.findBest(iterationTimeout);
+                    if (sol == null)
+                    {
+                        continue;
+                    }
+				    int value_ = sol.ObjectiveIntValue;
+                    if (!isBetter(value_, locallyBest))
+                    {
+                        continue;
+                    }
+				    locallyBest = value_;
+					locallyBestOp = op;
+					locallyBestSol = sol;
+				}
+                if (locallyBestOp != null)
+                {
+                    break;
+                }
+			    clearTaboo();
+			}
+			code.To = network;
+		    if (locallyBestOp != null)
+		    {
+		        locallyBestOp.applyTo(network);
+		    }
+            
+		    solution = locallyBestSol;
+			addTaboo(locallyBestOp);
+		}
+	}
+}
